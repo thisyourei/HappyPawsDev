@@ -1,0 +1,29 @@
+{% extends 'clinic/base.html' %}
+{% block page_title %}Veterinarios{% endblock %}
+{% block content %}
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">Equipo veterinario</div>
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Especialidad</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profesional in veterinarios %}
+          <tr>
+            <td>{{ profesional.nombre }}</td>
+            <td>{{ profesional.especialidad }}</td>
+            <td>{{ profesional.correo }}</td>
+            <td>{{ profesional.telefono }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No hay veterinarios registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

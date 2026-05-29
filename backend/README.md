@@ -30,7 +30,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-6. Open http://127.0.0.1:5000/ in your browser.
+6. Open http://127.0.0.1:8080/ in your browser.
 
 ## Run with Docker
 
@@ -38,10 +38,10 @@ From the repository root, build and run the container:
 
 ```powershell
 docker build -t happypaws-app .
-docker run -p 5000:5000 happypaws-app
+docker run -p 8080:8080 happypaws-app
 ```
 
-Then open http://127.0.0.1:5000/.
+Then open http://127.0.0.1:8080/.
 
 ## Cloud deployment options
 

@@ -1,0 +1,29 @@
+{% extends 'clinic/base.html' %}
+{% block page_title %}Tutores{% endblock %}
+{% block content %}
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">Tutores registrados</div>
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Dirección</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tutor in tutores %}
+          <tr>
+            <td>{{ tutor.nombre }}</td>
+            <td>{{ tutor.correo }}</td>
+            <td>{{ tutor.telefono }}</td>
+            <td>{{ tutor.direccion }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No hay tutores registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

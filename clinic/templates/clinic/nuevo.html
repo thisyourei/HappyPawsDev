@@ -1,0 +1,21 @@
+{% extends 'clinic/base.html' %}
+{% block page_title %}Nuevo registro{% endblock %}
+{% block content %}
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">Crear un nuevo registro</div>
+    <div class="form-tabs">
+      <a class="tab {% if tipo == 'mascota' %}activo{% endif %}" href="?tipo=mascota">Mascota</a>
+      <a class="tab {% if tipo == 'tutor' %}activo{% endif %}" href="?tipo=tutor">Tutor</a>
+      <a class="tab {% if tipo == 'veterinario' %}activo{% endif %}" href="?tipo=veterinario">Veterinario</a>
+      <a class="tab {% if tipo == 'informe' %}activo{% endif %}" href="?tipo=informe">Informe</a>
+    </div>
+    <div class="formulario">
+      <form method="post">
+        {% csrf_token %}
+        {{ current_form.as_p }}
+        <input type="hidden" name="action" value="{{ tipo }}">
+        <button class="btn-principal" type="submit">Guardar {{ tipo }}</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

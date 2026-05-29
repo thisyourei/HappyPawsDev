@@ -1,0 +1,31 @@
+{% extends 'clinic/base.html' %}
+{% block page_title %}Informes{% endblock %}
+{% block content %}
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">Informes clínicos</div>
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Título</th>
+          <th>Mascota</th>
+          <th>Veterinario</th>
+          <th>Tipo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for informe in informes %}
+          <tr>
+            <td>{{ informe.fecha }}</td>
+            <td>{{ informe.titulo }}</td>
+            <td>{{ informe.mascota.nombre }}</td>
+            <td>{% if informe.veterinario %}{{ informe.veterinario.nombre }}{% else %}Sin asignar{% endif %}</td>
+            <td>{{ informe.get_tipo_display }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5">No hay informes disponibles.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

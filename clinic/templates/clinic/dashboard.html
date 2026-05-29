@@ -1,0 +1,47 @@
+{% extends 'clinic/base.html' %}
+{% block page_title %}Inicio{% endblock %}
+{% block content %}
+  <div class="grilla-stats">
+    <div class="tarjeta-stat">
+      <div class="stat-etiqueta"><i class="ti ti-paw"></i> Pacientes registrados</div>
+      <div class="stat-valor">{{ pacientes.count }}</div>
+      <div class="stat-sub">Últimos 6 ingresados</div>
+    </div>
+    <div class="tarjeta-stat">
+      <div class="stat-etiqueta"><i class="ti ti-users"></i> Tutores</div>
+      <div class="stat-valor">{{ tutores }}</div>
+      <div class="stat-sub">Total de tutores</div>
+    </div>
+    <div class="tarjeta-stat">
+      <div class="stat-etiqueta"><i class="ti ti-stethoscope"></i> Veterinarios</div>
+      <div class="stat-valor">{{ veterinarios }}</div>
+      <div class="stat-sub">Profesionales activos</div>
+    </div>
+    <div class="tarjeta-stat">
+      <div class="stat-etiqueta"><i class="ti ti-report"></i> Informes</div>
+      <div class="stat-valor">{{ consultas }}</div>
+      <div class="stat-sub">Consultas, exámenes y diagnósticos</div>
+    </div>
+  </div>
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">Pacientes recientes</div>
+    {% if pacientes %}
+      <div class="lista">
+        {% for mascota in pacientes %}
+          <div class="item-lista">
+            <div class="en-linea" style="gap:10px;align-items:center;display:flex;flex:1;">
+              <span class="avatar-mascota">🐾</span>
+              <div>
+                <div class="item-nombre">{{ mascota.nombre }}</div>
+                <div class="item-detalle">{{ mascota.especie }} · Tutor: {{ mascota.tutor.nombre }}</div>
+              </div>
+            </div>
+            <a class="btn-secundario" href="{% url 'mascota_detalle' mascota.pk %}">Ver</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No hay mascotas cargadas aún.</p>
+    {% endif %}
+  </div>
+{% endblock %}

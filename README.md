@@ -1,73 +1,76 @@
 # HappyPaws
 
-Aplicación mockup de VetClínica con backend Flask y frontend estático.
+HappyPaws es un MVP de clínica veterinaria migrado a Django. Ahora el proyecto gestiona mascotas, tutores, veterinarios e informes clínicos desde una aplicación web completa.
 
-## Estructura
+## Qué incluye
 
-- `home/`: front-end estático con `index.html`, `assets/css/style.css` y `assets/js/app.js`.
-- `backend/`: servidor Flask que sirve `home/index.html` y los assets.
-- `Dockerfile`: contenedor para ejecutar la aplicación.
-- `app.yaml`: configuración para desplegar en Google App Engine.
-- `.github/workflows/deploy-cloud-run.yml`: despliega automáticamente a Google Cloud Run.
+- Backend Django con modelos para:
+  - `Tutor`
+  - `Veterinario`
+  - `Mascota`
+  - `Informe`
+- Interfaz web con páginas de dashboard, listas y creación de registros.
+- Admin Django para gestión rápida de datos.
+- Contenedor Docker listo para desplegar en Google Cloud Run.
 
-## Configuración recomendada
+## Archivos clave
 
-### 1. Conectar el repositorio a GitHub
+- `manage.py`: comandos de Django.
+- `happypaws/`: configuración del proyecto Django.
+- `clinic/`: app que contiene modelos, vistas, formularios, plantillas y estáticos.
+- `requirements.txt`: dependencias de Python.
+- `Dockerfile`: empaqueta la aplicación para Cloud Run.
+- `app.yaml`: configuración opcional para App Engine.
+- `.github/workflows/deploy-cloud-run.yml`: pipeline CI/CD para Cloud Run.
 
-Sube el proyecto a GitHub y trabaja en la rama `main`.
+## Preparación local
 
-### 2. Configurar Google Cloud
+1. Crear un entorno virtual:
 
-1. Crea un proyecto en Google Cloud.
-2. Habilita las APIs:
-   - Cloud Run
-   - Cloud Build
-   - Artifact Registry (o Container Registry)
-3. Crea una cuenta de servicio con estos roles básicos:
-   - `roles/run.admin`
-   - `roles/cloudbuild.builds.editor`
-   - `roles/storage.admin`
-   - `roles/iam.serviceAccountUser`
-4. Genera una clave JSON para la cuenta de servicio.
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-### 3. Añadir secretos de GitHub
+2. Instalar dependencias:
 
-En el repositorio de GitHub, agrega:
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-- `GCP_PROJECT_ID`: ID del proyecto de Google Cloud.
-- `GCP_REGION`: región, por ejemplo `us-central1` o `us-west1`.
-- `GCP_SA_KEY`: contenido JSON de la cuenta de servicio.
+3. Ejecutar migraciones:
 
-### 4. Despliegue automático con GitHub Actions
+```powershell
+python manage.py migrate
+```
 
-Cada vez que empujes a `main`, el workflow en `.github/workflows/deploy-cloud-run.yml` hará:
+4. Crear un superusuario para acceder al admin:
 
-1. Clonar el repositorio.
-2. Configurar `gcloud` con tu cuenta de servicio.
-3. Construir la imagen Docker.
-4. Publicar la imagen en `gcr.io`.
-5. Desplegar a Cloud Run.
+```powershell
+python manage.py createsuperuser
+```
 
-### 5. Validación de costo
+5. Iniciar el servidor local:
 
-Google Cloud Run ofrece una capa gratuita generosa para pruebas:
+```powershell
+python manage.py runserver
+```
 
-- hasta `2M` solicitudes/mes
-- `360,000` vCPU-segundos
-- `1 GiB` memoria
+La app estará disponible en `http://127.0.0.1:8000/`.
 
-Eso es ideal para validar tu app sin gastos significativos.
+## Despliegue en Google Cloud Run
 
-## Otros despliegues posibles
+Asegúrate de configurar los siguientes secretos en GitHub:
 
-- `Google App Engine`: usa `app.yaml` si prefieres no trabajar con contenedores.
-- `AWS`: también puedes usar el `Dockerfile` con Elastic Beanstalk o ECS.
+- `GCP_PROJECT_ID`
+- `GCP_REGION`
+- `GCP_SA_KEY`
+
+El workflow en `.github/workflows/deploy-cloud-run.yml` construye la imagen Docker y despliega a Cloud Run cuando haces push a `main`.
 
 ## Notas
 
-El flujo recomendado para pruebas rápidas es:
-
-1. sube el código a GitHub,
-2. configura los secretos de GCP,
-3. empuja a `main`,
-4. revisa la salida del workflow en GitHub Actions.
+- El proyecto usa SQLite por defecto en local y en el contenedor.
+- Para producción puedes cambiar a una base de datos administrada (`PostgreSQL`, Cloud SQL, etc.).
+- Si quieres usar App Engine, `app.yaml` ya incluye el entrypoint para Gunicorn.

@@ -1,2 +1,6 @@
 runtime: python312
-entrypoint: gunicorn -b :$PORT backend.app:app
+entrypoint: gunicorn -b :$PORT happypaws.wsgi:application
+
+env_variables:
+  DJANGO_DEBUG: 'False'
+  DJANGO_SECRET_KEY: 'replace-this-secret'

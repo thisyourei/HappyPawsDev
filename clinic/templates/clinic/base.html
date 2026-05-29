@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HappyPaws | Clínica Veterinaria</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'clinic/css/style.css' %}">
+</head>
+<body>
+  <div class="app">
+    <div class="sidebar">
+      <div class="logo">
+        <div class="logo-marca">
+          <i class="ti ti-paw" style="font-size:22px;color:#185FA5"></i>
+          <span class="logo-titulo">VetClínica</span>
+        </div>
+        <div class="logo-sub">Sistema de gestión</div>
+      </div>
+      <div class="nav-seccion">Principal</div>
+      <a class="nav-item {% if request.path == '/' %}activo{% endif %}" href="{% url 'dashboard' %}"><i class="ti ti-layout-dashboard"></i> Inicio</a>
+      <a class="nav-item {% if request.path == '/pacientes/' %}activo{% endif %}" href="{% url 'pacientes' %}"><i class="ti ti-paw"></i> Pacientes</a>
+      <a class="nav-item {% if request.path == '/tutores/' %}activo{% endif %}" href="{% url 'tutores' %}"><i class="ti ti-users"></i> Tutores</a>
+      <div class="nav-seccion">Clínica</div>
+      <a class="nav-item {% if request.path == '/informes/' %}activo{% endif %}" href="{% url 'informes' %}"><i class="ti ti-stethoscope"></i> Informes</a>
+      <a class="nav-item {% if request.path == '/nuevo/' %}activo{% endif %}" href="{% url 'nuevo_registro' %}"><i class="ti ti-plus"></i> Nuevo registro</a>
+      <div class="nav-spacer"></div>
+      <a class="nav-item" href="/admin/"><i class="ti ti-settings"></i> Admin</a>
+    </div>
+    <div class="main">
+      <div class="topbar">
+        <span class="topbar-titulo">{% block page_title %}Panel{% endblock %}</span>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="buscador">Buscar paciente o tutor...</div>
+          <a class="btn-principal" href="{% url 'nuevo_registro' %}"><i class="ti ti-plus"></i> Nuevo</a>
+        </div>
+      </div>
+      <div class="contenido">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+  <script src="{% static 'clinic/js/app.js' %}"></script>
+</body>
+</html>

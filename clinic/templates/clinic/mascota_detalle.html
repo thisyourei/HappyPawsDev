@@ -1,0 +1,42 @@
+{% extends 'clinic/base.html' %}
+{% block page_title %}Perfil de {{ mascota.nombre }}{% endblock %}
+{% block content %}
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">{{ mascota.nombre }} · {{ mascota.especie }}</div>
+    <div class="detalle-grid">
+      <div><strong>Tutor:</strong> {{ mascota.tutor.nombre }}</div>
+      <div><strong>Veterinario:</strong> {% if mascota.veterinario %}{{ mascota.veterinario.nombre }}{% else %}Sin asignar{% endif %}</div>
+      <div><strong>Raza:</strong> {{ mascota.raza }}</div>
+      <div><strong>Sexo:</strong> {{ mascota.get_sexo_display }}</div>
+      <div><strong>Edad:</strong> {{ mascota.edad_meses }} meses</div>
+      <div><strong>Peso:</strong> {{ mascota.peso|default:'-' }} kg</div>
+    </div>
+  </div>
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">Informes asociados</div>
+    {% if informes %}
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Título</th>
+            <th>Veterinario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for informe in informes %}
+            <tr>
+              <td>{{ informe.fecha }}</td>
+              <td>{{ informe.get_tipo_display }}</td>
+              <td>{{ informe.titulo }}</td>
+              <td>{% if informe.veterinario %}{{ informe.veterinario.nombre }}{% else %}Sin asignar{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No hay informes registrados para esta mascota.</p>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'clinic/base.html' %}
+{% block page_title %}Pacientes{% endblock %}
+{% block content %}
+  <div class="tarjeta">
+    <div class="titulo-tarjeta">Listado de mascotas</div>
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Paciente</th>
+          <th>Especie / Raza</th>
+          <th>Tutor</th>
+          <th>Veterinario</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mascota in mascotas %}
+          <tr>
+            <td>{{ mascota.nombre }}</td>
+            <td>{{ mascota.especie }} / {{ mascota.raza }}</td>
+            <td>{{ mascota.tutor.nombre }}</td>
+            <td>{% if mascota.veterinario %}{{ mascota.veterinario.nombre }}{% else %}Sin asignar{% endif %}</td>
+            <td><a class="btn-secundario" href="{% url 'mascota_detalle' mascota.pk %}">Detalle</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5">No hay mascotas registradas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
