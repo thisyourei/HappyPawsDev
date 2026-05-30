@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HappyPaws — Iniciar sesión</title>
+  <script>(function(){var t=localStorage.getItem('hp-tema');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .login-card { width: 100%; max-width: 380px; }
+    .login-footer { text-align:center; margin-top:14px; font-size:11px; color:#9ca3af; }
+    .error-box {
+      background:#FCEBEB; border:1px solid #F1ADAD; color:#A32D2D;
+      border-radius:8px; padding:10px 14px; margin-bottom:16px;
+      font-size:13px; display:flex; align-items:center; gap:8px;
+    }
+    .input-icon-wrap { position:relative; }
+    .input-icon-wrap i {
+      position:absolute; left:10px; top:50%; transform:translateY(-50%);
+      font-size:16px; color:#9ca3af; pointer-events:none;
+    }
+    .input-icon-wrap input { padding-left:34px !important; }
+    .divider { border:none; border-top:1px solid #e5e7eb; margin:20px 0; }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="tarjeta" style="padding:36px 32px">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="display:inline-flex;align-items:center;gap:9px;margin-bottom:8px">
+        <i class="ti ti-paw" style="font-size:30px;color:#185FA5"></i>
+        <span style="font-size:22px;font-weight:700;color:#111827">HappyPaws</span>
+      </div>
+      <div style="font-size:12px;color:#9ca3af">Sistema de gestión veterinaria</div>
+    </div>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="error-box">
+      <i class="ti ti-alert-circle" style="font-size:17px;flex-shrink:0"></i>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Formulario -->
+    <form method="post" autocomplete="on">
+      {% csrf_token %}
+
+      <div class="campo" style="margin-bottom:14px">
+        <label>Correo electrónico</label>
+        <div class="input-icon-wrap">
+          <i class="ti ti-mail"></i>
+          <input
+            type="text"
+            name="username"
+            placeholder="correo@happypaws.cl"
+            value="{{ request.POST.username|default:'' }}"
+            autofocus
+            autocomplete="username"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="campo" style="margin-bottom:24px">
+        <label>Contraseña</label>
+        <div class="input-icon-wrap">
+          <i class="ti ti-lock"></i>
+          <input
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+      </div>
+
+      <button type="submit" class="btn-principal" style="width:100%;justify-content:center;padding:11px 16px;font-size:13px">
+        <i class="ti ti-login"></i> Iniciar sesión
+      </button>
+    </form>
+
+  </div>
+
+  <div class="login-footer">
+    HappyPaws &copy; 2026 &mdash; Clínica veterinaria
+  </div>
+</div>
+
+</body>
+</html>

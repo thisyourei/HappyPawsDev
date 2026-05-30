@@ -5,6 +5,8 @@ env_variables:
   DEBUG: "False"
   DJANGO_ALLOWED_HOSTS: ".appspot.com,.run.app"
 
-# Configura la instancia de Cloud SQL (formato: proyecto:region:instancia)
+# Completar con la instancia real antes de desplegar en App Engine
+# Formato: proyecto:region:nombre-instancia
+# Ejemplo: happypawschl:us-central1:happypaws-db
 beta_settings:
-  cloud_sql_instances: "happypawschl:REGION:NOMBRE_INSTANCIA"
+  cloud_sql_instances: "happypawschl:us-central1:happypaws-db"

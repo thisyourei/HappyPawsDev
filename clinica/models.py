@@ -1,4 +1,49 @@
+from django.contrib.auth.models import User
 from django.db import models
+
+
+class PerfilUsuario(models.Model):
+    ROL = [
+        ('administrador', 'Administrador'),
+        ('veterinario', 'Veterinario'),
+        ('recepcionista', 'Recepcionista'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
+    rol = models.CharField(max_length=20, choices=ROL)
+
+    def __str__(self):
+        return f'{self.user.get_full_name() or self.user.username} ({self.get_rol_display()})'
+
+    @property
+    def nombre_completo(self):
+        return self.user.get_full_name() or self.user.username
+
+    @property
+    def puede_registrar(self):
+        """Puede crear nuevos pacientes y tutores"""
+        return self.rol in ('administrador', 'veterinario')
+
+    @property
+    def puede_gestionar_usuarios(self):
+        """Puede ver y crear usuarios"""
+        return self.rol in ('administrador', 'veterinario')
+
+    @property
+    def puede_crear_veterinarios(self):
+        """Solo el administrador puede crear cuentas de veterinario"""
+        return self.rol == 'administrador'
+
+    @property
+    def roles_que_puede_crear(self):
+        if self.rol == 'administrador':
+            return ['veterinario', 'recepcionista']
+        if self.rol == 'veterinario':
+            return ['recepcionista']
+        return []
+
+    class Meta:
+        verbose_name = 'perfil de usuario'
+        verbose_name_plural = 'perfiles de usuarios'
 
 
 class Tutor(models.Model):

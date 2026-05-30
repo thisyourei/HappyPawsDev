@@ -53,7 +53,7 @@ jobs:
 
       - name: Run database migrations
         run: |
-          gcloud run jobs create happypaws-migrate-${{ github.run_number }} \
+          gcloud run jobs deploy happypaws-migrate \
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/happypaws-app:${{ github.sha }} \
             --region ${{ secrets.GCP_REGION }} \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
@@ -66,9 +66,11 @@ jobs:
               DEBUG=False" \
             --command python \
             --args "manage.py,migrate" \
-            --execute-now \
+            --quiet
+          gcloud run jobs execute happypaws-migrate \
+            --region ${{ secrets.GCP_REGION }} \
             --wait \
-            --quiet || true
+            --quiet
 
       - name: Print Cloud Run URL
         run: gcloud run services describe happypaws-app --region ${{ secrets.GCP_REGION }} --format='value(status.url)'

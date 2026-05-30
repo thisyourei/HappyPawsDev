@@ -1,73 +1,103 @@
-# HappyPaws
+# HappyPaws — Sistema de gestión veterinaria
 
-Aplicación mockup de VetClínica con backend Flask y frontend estático.
+Aplicación web para clínicas veterinarias construida con Django y PostgreSQL (Cloud SQL en GCP).
 
-## Estructura
+## Estructura del proyecto
 
-- `home/`: front-end estático con `index.html`, `assets/css/style.css` y `assets/js/app.js`.
-- `backend/`: servidor Flask que sirve `home/index.html` y los assets.
-- `Dockerfile`: contenedor para ejecutar la aplicación.
-- `app.yaml`: configuración para desplegar en Google App Engine.
-- `.github/workflows/deploy-cloud-run.yml`: despliega automáticamente a Google Cloud Run.
+```
+HappyPaws/
+├── happypaws/          # Configuración Django (settings, urls, wsgi)
+├── clinica/            # App principal — modelos, vistas, formularios, admin
+│   └── migrations/
+├── templates/clinica/  # Templates HTML (index, login, consulta_detalle)
+├── static/             # CSS y JS
+├── Dockerfile          # Para despliegue en Cloud Run
+├── app.yaml            # Configuración para App Engine (alternativa)
+└── .github/workflows/  # CI/CD con GitHub Actions → Cloud Run
+```
 
-## Configuración recomendada
+## Roles de usuario
 
-### 1. Conectar el repositorio a GitHub
+| Rol | Permisos |
+|---|---|
+| **Administrador** | Acceso total + crear Veterinarios y Recepcionistas |
+| **Veterinario** | Acceso clínico + crear Recepcionistas |
+| **Recepcionista** | Solo agendar consultas con datos existentes |
 
-Sube el proyecto a GitHub y trabaja en la rama `main`.
+## Configuración local
 
-### 2. Configurar Google Cloud
+### 1. Requisitos
+- Python 3.12+
+- PostgreSQL 17
+- Cloud SQL Auth Proxy (para conectar a la BD de GCP en local)
 
-1. Crea un proyecto en Google Cloud.
-2. Habilita las APIs:
-   - Cloud Run
-   - Cloud Build
-   - Artifact Registry (o Container Registry)
-3. Crea una cuenta de servicio con estos roles básicos:
-   - `roles/run.admin`
-   - `roles/cloudbuild.builds.editor`
-   - `roles/storage.admin`
-   - `roles/iam.serviceAccountUser`
-4. Genera una clave JSON para la cuenta de servicio.
+### 2. Variables de entorno
 
-### 3. Añadir secretos de GitHub
+Copia `.env.example` a `.env` y completa los valores:
 
-En el repositorio de GitHub, agrega:
+```
+DJANGO_SECRET_KEY=...
+DEBUG=True
+DB_NAME=happypaws
+DB_USER=happypaws_user
+DB_PASSWORD=...
+DB_HOST=127.0.0.1          # via Cloud SQL Proxy local
+CLOUD_SQL_CONNECTION_NAME= # vacío en local
+```
 
-- `GCP_PROJECT_ID`: ID del proyecto de Google Cloud.
-- `GCP_REGION`: región, por ejemplo `us-central1` o `us-west1`.
-- `GCP_SA_KEY`: contenido JSON de la cuenta de servicio.
+### 3. Instalar dependencias y migrar
 
-### 4. Despliegue automático con GitHub Actions
+```bash
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
 
-Cada vez que empujes a `main`, el workflow en `.github/workflows/deploy-cloud-run.yml` hará:
+## Despliegue en GCP (Cloud Run)
 
-1. Clonar el repositorio.
-2. Configurar `gcloud` con tu cuenta de servicio.
-3. Construir la imagen Docker.
-4. Publicar la imagen en `gcr.io`.
-5. Desplegar a Cloud Run.
+### APIs requeridas
+Habilitar en GCP Console → proyecto `happypawschl`:
+- Cloud Run API
+- Cloud SQL Admin API
+- Cloud Resource Manager API
+- Container Registry API
+- Cloud Build API
 
-### 5. Validación de costo
+### Permisos de la cuenta de servicio
+Además de los roles ya asignados, agregar:
+```bash
+gcloud projects add-iam-policy-binding happypawschl \
+  --member="serviceAccount:yiokai-as@happypawschl.iam.gserviceaccount.com" \
+  --role="roles/cloudsql.client"
+```
 
-Google Cloud Run ofrece una capa gratuita generosa para pruebas:
+### Crear instancia CloudSQL (primera vez)
+```bash
+gcloud sql instances create happypaws-db \
+  --database-version=POSTGRES_15 \
+  --tier=db-f1-micro \
+  --region=us-central1 \
+  --project=happypawschl
 
-- hasta `2M` solicitudes/mes
-- `360,000` vCPU-segundos
-- `1 GiB` memoria
+gcloud sql databases create happypaws --instance=happypaws-db
+gcloud sql users create happypaws_user --instance=happypaws-db --password=TU_PASSWORD
+```
 
-Eso es ideal para validar tu app sin gastos significativos.
+### Secrets en GitHub
+Configurar en Settings → Secrets and variables → Actions:
 
-## Otros despliegues posibles
+| Secret | Valor |
+|---|---|
+| `GCP_PROJECT_ID` | `happypawschl` |
+| `GCP_SA_KEY` | Contenido de `happypawschl_pass.json` |
+| `GCP_REGION` | `us-central1` |
+| `CLOUD_SQL_CONNECTION_NAME` | `happypawschl:us-central1:happypaws-db` |
+| `DJANGO_SECRET_KEY` | Clave secreta larga |
+| `DB_NAME` | `happypaws` |
+| `DB_USER` | `happypaws_user` |
+| `DB_PASSWORD` | Password elegido |
 
-- `Google App Engine`: usa `app.yaml` si prefieres no trabajar con contenedores.
-- `AWS`: también puedes usar el `Dockerfile` con Elastic Beanstalk o ECS.
-
-## Notas
-
-El flujo recomendado para pruebas rápidas es:
-
-1. sube el código a GitHub,
-2. configura los secretos de GCP,
-3. empuja a `main`,
-4. revisa la salida del workflow en GitHub Actions.
+### Deploy
+Cada push a `main` despliega automáticamente via GitHub Actions.
+El workflow construye la imagen Docker, la publica en GCR y ejecuta las migraciones.

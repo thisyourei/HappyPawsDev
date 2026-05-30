@@ -1,0 +1,339 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HappyPaws — Consulta #{{ consulta.pk }} · {{ consulta.paciente.nombre }}</title>
+  <script>(function(){var t=localStorage.getItem('hp-tema');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+  <style>
+    body { align-items: flex-start; padding: 20px; }
+    .detalle-wrap { width: 100%; max-width: 980px; margin: 0 auto; }
+
+    /* Topbar de navegación */
+    .detalle-topbar {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    /* Header paciente */
+    .paciente-header {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .paciente-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--accent-light); display: flex;
+      align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0;
+    }
+    .alerta-alergia-grande {
+      background: #FCEBEB; border: 1px solid #F1ADAD; color: #A32D2D;
+      border-radius: 6px; padding: 6px 12px; font-size: 12px;
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+    }
+
+    /* Estado barra */
+    .estado-barra {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 12px 16px;
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .estado-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* Secciones del formulario */
+    .seccion-titulo {
+      font-size: 10px; font-weight: 700; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding-bottom: 8px; margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Historial */
+    .item-hist {
+      border-left: 3px solid var(--border); padding: 10px 14px;
+      margin-bottom: 10px; border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      background: var(--bg-secondary);
+    }
+    .item-hist:hover { border-left-color: var(--accent); background: var(--accent-light); }
+    .item-hist-fecha { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
+    .item-hist-motivo { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .item-hist-diag { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* Valores de solo lectura */
+    .campo-readonly {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 8px 10px;
+      font-size: 13px; color: var(--text-primary);
+    }
+
+    /* Print */
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; padding: 0; font-size: 12px; }
+      .detalle-topbar { display: none; }
+      .tarjeta, .paciente-header, .estado-barra { box-shadow: none; border: 1px solid #ccc; }
+      .detalle-wrap { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="detalle-wrap">
+
+  <!-- ── Topbar ── -->
+  <div class="detalle-topbar no-print">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="javascript:history.back()" class="btn-secundario" style="display:flex;align-items:center;gap:5px;text-decoration:none;font-size:12px">
+        <i class="ti ti-arrow-left"></i> Volver
+      </a>
+      <div style="display:flex;align-items:center;gap:7px">
+        <i class="ti ti-paw" style="font-size:17px;color:#185FA5"></i>
+        <span style="font-size:14px;font-weight:600;color:#111827">HappyPaws</span>
+      </div>
+      <span style="color:#d1d5db">·</span>
+      <span style="font-size:12px;color:#6b7280">Consulta #{{ consulta.pk }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="window.print()" class="btn-secundario" style="display:flex;align-items:center;gap:5px;font-size:12px">
+        <i class="ti ti-printer"></i> Imprimir ficha
+      </button>
+      <button onclick="toggleTema()" class="btn-secundario" style="display:flex;align-items:center;gap:5px;font-size:12px" title="Cambiar tema">
+        <i id="tema-icono" class="ti ti-moon"></i>
+      </button>
+      <div style="display:flex;align-items:center;gap:6px;padding-left:8px;border-left:1px solid #e5e7eb">
+        <span style="font-size:11px;color:#6b7280">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <a href="{% url 'logout' %}" style="color:#9ca3af;font-size:17px;text-decoration:none" title="Cerrar sesión"><i class="ti ti-logout"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Header paciente ── -->
+  <div class="paciente-header">
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div class="paciente-avatar">
+        {% with e=consulta.paciente.especie %}{% if e == 'canino' %}🐕{% elif e == 'felino' %}🐈{% elif e == 'ave' %}🦜{% elif e == 'reptil' %}🐢{% elif e == 'roedor' %}🐇{% else %}🐾{% endif %}{% endwith %}
+      </div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
+          <span style="font-size:18px;font-weight:700;color:#111827">{{ consulta.paciente.nombre }}</span>
+          <span class="etiq etiq-{% if consulta.paciente.estado == 'activo' %}verde{% elif consulta.paciente.estado == 'seguimiento' %}ambar{% elif consulta.paciente.estado == 'urgente' %}rojo{% else %}gris{% endif %}">{{ consulta.paciente.get_estado_display }}</span>
+          <span class="etiq etiq-{% if consulta.paciente.especie == 'canino' %}azul{% elif consulta.paciente.especie == 'felino' %}morado{% else %}verde{% endif %}">{{ consulta.paciente.get_especie_display }}</span>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#6b7280">
+          {% if consulta.paciente.raza %}<span><i class="ti ti-dna"></i> {{ consulta.paciente.raza }}</span>{% endif %}
+          <span><i class="ti ti-gender-{% if consulta.paciente.sexo == 'M' %}male{% else %}female{% endif %}"></i> {{ consulta.paciente.get_sexo_display }}{% if consulta.paciente.fecha_nacimiento %} · {{ consulta.paciente.fecha_nacimiento|timesince }}{% endif %}</span>
+          {% if consulta.paciente.peso %}<span><i class="ti ti-weight"></i> {{ consulta.paciente.peso }} kg</span>{% endif %}
+          <span><i class="ti ti-notes-medical"></i> {{ total_consultas }} consulta{{ total_consultas|pluralize:"s" }} en total</span>
+        </div>
+        {% if consulta.paciente.alergias %}
+        <div class="alerta-alergia-grande">
+          <i class="ti ti-alert-triangle" style="font-size:14px"></i>
+          <strong>Alergias:</strong> {{ consulta.paciente.alergias }}
+        </div>
+        {% endif %}
+      </div>
+      <!-- Tutor -->
+      <div style="text-align:right;font-size:12px;color:#6b7280;min-width:160px">
+        <div style="font-weight:600;color:#111827;margin-bottom:3px">{{ consulta.paciente.tutor.nombre }}</div>
+        {% if consulta.paciente.tutor.telefono %}<div>📞 {{ consulta.paciente.tutor.telefono }}</div>{% endif %}
+        {% if consulta.paciente.tutor.email %}<div>✉️ {{ consulta.paciente.tutor.email }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Estado actual + acciones rápidas ── -->
+  <div class="estado-barra no-print">
+    <div class="estado-dot" style="background:{% if consulta.estado == 'completada' %}#3B6D11{% elif consulta.estado == 'en_curso' %}#185FA5{% else %}#854F0B{% endif %}"></div>
+    <span style="font-size:13px;font-weight:600">{{ consulta.get_estado_display }}</span>
+    <span style="color:#d1d5db">·</span>
+    <span style="font-size:12px;color:#6b7280">{{ consulta.fecha|date:"d M Y" }} a las {{ consulta.hora|time:"H:i" }}</span>
+    <span style="color:#d1d5db">·</span>
+    <span style="font-size:12px;color:#6b7280">{{ consulta.veterinario.nombre }}</span>
+    {% if puede_editar %}
+    <div style="margin-left:auto;display:flex;gap:6px">
+      {% if consulta.estado == 'pendiente' %}
+      <form method="post" action="{% url 'consulta_estado' consulta.pk %}">{% csrf_token %}<input type="hidden" name="estado" value="en_curso"><button type="submit" class="btn-accion btn-accion-azul" style="padding:5px 12px;font-size:11px">Iniciar consulta</button></form>
+      {% elif consulta.estado == 'en_curso' %}
+      <form method="post" action="{% url 'consulta_estado' consulta.pk %}">{% csrf_token %}<input type="hidden" name="estado" value="completada"><button type="submit" class="btn-accion btn-accion-verde" style="padding:5px 12px;font-size:11px">Marcar completada</button></form>
+      {% elif consulta.estado == 'completada' %}
+      <form method="post" action="{% url 'consulta_estado' consulta.pk %}">{% csrf_token %}<input type="hidden" name="estado" value="pendiente"><button type="submit" class="btn-accion btn-accion-gris" style="padding:5px 12px;font-size:11px">Reabrir</button></form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Contenido principal en dos columnas ── -->
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start">
+
+    <!-- Columna izquierda: formulario -->
+    <div>
+
+      <!-- Formulario de edición -->
+      {% if puede_editar %}
+      <form method="post" action="{% url 'consulta_detalle' consulta.pk %}">
+        {% csrf_token %}
+      {% endif %}
+
+        <!-- Sección: General -->
+        <div class="tarjeta" style="margin-bottom:12px">
+          <div class="seccion-titulo"><i class="ti ti-info-circle"></i> Información general</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="campo">
+              <label>Fecha</label>
+              {% if puede_editar %}<input type="date" name="fecha" value="{{ consulta.fecha|date:'Y-m-d' }}" required>{% else %}<div class="campo-readonly">{{ consulta.fecha|date:"d M Y" }}</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Hora</label>
+              {% if puede_editar %}<input type="time" name="hora" value="{{ consulta.hora|time:'H:i' }}" required>{% else %}<div class="campo-readonly">{{ consulta.hora|time:"H:i" }}</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Veterinario/a</label>
+              {% if puede_editar %}
+              <select name="veterinario" required>
+                {% for v in veterinarios %}<option value="{{ v.pk }}" {% if v.pk == consulta.veterinario.pk %}selected{% endif %}>{{ v.nombre }}</option>{% endfor %}
+              </select>
+              {% else %}<div class="campo-readonly">{{ consulta.veterinario.nombre }}</div>{% endif %}
+            </div>
+            <div class="campo" style="grid-column:1/-1">
+              <label>Motivo de consulta</label>
+              {% if puede_editar %}<input type="text" name="motivo" value="{{ consulta.motivo }}" required>{% else %}<div class="campo-readonly">{{ consulta.motivo }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Clínica -->
+        <div class="tarjeta" style="margin-bottom:12px">
+          <div class="seccion-titulo"><i class="ti ti-stethoscope"></i> Datos clínicos</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="campo">
+              <label>Peso en esta visita (kg)</label>
+              {% if puede_editar %}<input type="number" name="peso_visita" value="{{ consulta.peso_visita|default:'' }}" step="0.1" min="0" placeholder="0.0">{% else %}<div class="campo-readonly">{{ consulta.peso_visita|default:"—" }} kg</div>{% endif %}
+            </div>
+            <div class="campo">
+              <label>Temperatura (°C)</label>
+              {% if puede_editar %}<input type="number" name="temperatura" value="{{ consulta.temperatura|default:'' }}" step="0.1" min="0" placeholder="38.5">{% else %}<div class="campo-readonly">{{ consulta.temperatura|default:"—" }} °C</div>{% endif %}
+            </div>
+            <div class="campo" style="grid-column:1/-1">
+              <label>Diagnóstico</label>
+              {% if puede_editar %}<textarea name="diagnostico" rows="4" placeholder="Diagnóstico clínico...">{{ consulta.diagnostico }}</textarea>{% else %}<div class="campo-readonly" style="min-height:80px;white-space:pre-line">{{ consulta.diagnostico|default:"Sin diagnóstico registrado." }}</div>{% endif %}
+            </div>
+            <div class="campo" style="grid-column:1/-1">
+              <label>Tratamiento / prescripción</label>
+              {% if puede_editar %}<textarea name="tratamiento" rows="4" placeholder="Medicamentos, dosis, indicaciones...">{{ consulta.tratamiento }}</textarea>{% else %}<div class="campo-readonly" style="min-height:80px;white-space:pre-line">{{ consulta.tratamiento|default:"Sin tratamiento registrado." }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Seguimiento -->
+        <div class="tarjeta" style="margin-bottom:{% if puede_editar %}12{% else %}0{% endif %}px">
+          <div class="seccion-titulo"><i class="ti ti-calendar-plus"></i> Seguimiento</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="campo">
+              <label>¿Requiere seguimiento?</label>
+              {% if puede_editar %}
+              <select name="requiere_seguimiento">
+                <option value="no" {% if consulta.requiere_seguimiento == 'no' %}selected{% endif %}>No</option>
+                <option value="programada" {% if consulta.requiere_seguimiento == 'programada' %}selected{% endif %}>Sí — cita programada</option>
+                <option value="urgente" {% if consulta.requiere_seguimiento == 'urgente' %}selected{% endif %}>Sí — urgente</option>
+              </select>
+              {% else %}
+              <div class="campo-readonly">{{ consulta.get_requiere_seguimiento_display }}</div>
+              {% endif %}
+            </div>
+            <div class="campo">
+              <label>Fecha próxima visita</label>
+              {% if puede_editar %}<input type="date" name="fecha_proxima_visita" value="{{ consulta.fecha_proxima_visita|date:'Y-m-d'|default:'' }}">{% else %}<div class="campo-readonly">{{ consulta.fecha_proxima_visita|date:"d M Y"|default:"—" }}</div>{% endif %}
+            </div>
+            <div class="campo" style="grid-column:1/-1">
+              <label>Indicaciones para el tutor</label>
+              {% if puede_editar %}<textarea name="indicaciones_tutor" rows="3" placeholder="Cuidados en casa, señales de alerta, dieta...">{{ consulta.indicaciones_tutor }}</textarea>{% else %}<div class="campo-readonly" style="min-height:60px;white-space:pre-line">{{ consulta.indicaciones_tutor|default:"Sin indicaciones." }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if puede_editar %}
+        <div class="acciones-form no-print">
+          <button type="button" onclick="history.back()" class="btn-secundario">Cancelar</button>
+          <button type="submit" class="btn-principal"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+        </div>
+        </form>
+        {% endif %}
+
+    </div>
+
+    <!-- Columna derecha: historial del paciente -->
+    <div>
+
+      <!-- Historial de consultas del paciente -->
+      <div class="tarjeta" style="margin-bottom:12px">
+        <div class="seccion-titulo"><i class="ti ti-clock-history"></i> Historial del paciente</div>
+        {% if historial %}
+        {% for h in historial %}
+        <a href="{% url 'consulta_detalle' h.pk %}" style="text-decoration:none;display:block">
+          <div class="item-hist">
+            <div class="item-hist-fecha">{{ h.fecha|date:"d M Y" }} · {{ h.hora|time:"H:i" }} · {{ h.veterinario.nombre }}</div>
+            <div class="item-hist-motivo">{{ h.motivo }}</div>
+            {% if h.diagnostico %}<div class="item-hist-diag">{{ h.diagnostico|truncatechars:80 }}</div>{% endif %}
+            <div style="margin-top:5px">
+              <span class="etiq etiq-{% if h.estado == 'completada' %}verde{% elif h.estado == 'en_curso' %}azul{% else %}ambar{% endif %}">{{ h.get_estado_display }}</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+        {% else %}
+        <div style="color:#9ca3af;font-size:12px;text-align:center;padding:16px">
+          <i class="ti ti-note-off" style="font-size:22px;display:block;margin-bottom:4px"></i>
+          Sin historial previo para este paciente.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Patologías registradas -->
+      {% if consulta.paciente.patologias.exists %}
+      <div class="tarjeta" style="margin-bottom:12px">
+        <div class="seccion-titulo"><i class="ti ti-virus"></i> Patologías</div>
+        {% for p in consulta.paciente.patologias.all %}
+        <div style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+            <span style="font-size:13px;font-weight:600">{{ p.nombre }}</span>
+            <span class="etiq etiq-{% if p.tipo == 'alerta' %}rojo{% elif p.tipo == 'cronica' %}ambar{% else %}gris{% endif %}">{{ p.get_tipo_display }}</span>
+          </div>
+          {% if p.tratamiento_actual %}<div style="font-size:11px;color:#6b7280">{{ p.tratamiento_actual|truncatechars:70 }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Vacunas -->
+      {% if consulta.paciente.vacunas.exists %}
+      <div class="tarjeta">
+        <div class="seccion-titulo"><i class="ti ti-vaccine"></i> Vacunas</div>
+        {% for v in consulta.paciente.vacunas.all %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0">
+          <span style="font-size:12px;font-weight:500">{{ v.nombre }}</span>
+          {% if v.proxima_dosis %}
+          <span class="etiq etiq-{% if v.proxima_dosis < hoy %}rojo{% else %}verde{% endif %}" style="font-size:9px">
+            {% if v.proxima_dosis < hoy %}Vencida{% else %}Al día{% endif %}
+          </span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div><!-- fin detalle-wrap -->
+</body>
+</html>
