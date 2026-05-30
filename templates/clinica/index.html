@@ -111,70 +111,147 @@
 
       <!-- ══════════════ INICIO ══════════════ -->
       <div class="pantalla activa" id="pantalla-inicio">
-        <div class="grilla-stats">
-          <div class="tarjeta-stat">
-            <div class="stat-etiqueta"><i class="ti ti-paw"></i> Pacientes activos</div>
-            <div class="stat-valor">{{ total_pacientes }}</div>
-            <div class="stat-sub">registrados en el sistema</div>
+
+        <!-- Saludo + resumen rápido -->
+        <div class="inicio-saludo-bar">
+          <div>
+            <div class="inicio-fecha">{{ hoy|date:"l j \d\e F \d\e Y" }}</div>
+            <div class="inicio-saludo-txt">{{ saludo }}, {{ request.user.first_name|default:request.user.username }}</div>
           </div>
-          <div class="tarjeta-stat">
-            <div class="stat-etiqueta"><i class="ti ti-users"></i> Tutores registrados</div>
-            <div class="stat-valor">{{ total_tutores }}</div>
-            <div class="stat-sub">en la base de datos</div>
-          </div>
-          <div class="tarjeta-stat">
-            <div class="stat-etiqueta"><i class="ti ti-calendar"></i> Citas hoy</div>
-            <div class="stat-valor">{{ citas_hoy }}</div>
-            <div class="stat-sub">{{ citas_pendientes }} pendiente{{ citas_pendientes|pluralize:"s" }}</div>
-          </div>
-          <div class="tarjeta-stat">
-            <div class="stat-etiqueta"><i class="ti ti-alert-circle"></i> Seguimientos</div>
-            <div class="stat-valor">{{ seguimientos }}</div>
-            <div class="stat-sub">{{ urgentes }} urgente{{ urgentes|pluralize:"s" }}</div>
+          <div class="inicio-resumen">
+            <span><strong>{{ stats_consultas.hoy_completadas }}</strong> completada{{ stats_consultas.hoy_completadas|pluralize:"s" }}</span>
+            <span class="sep">·</span>
+            <span><strong>{{ stats_consultas.hoy_en_curso }}</strong> en curso</span>
+            <span class="sep">·</span>
+            <span><strong>{{ stats_consultas.hoy_pendientes }}</strong> pendiente{{ stats_consultas.hoy_pendientes|pluralize:"s" }}</span>
           </div>
         </div>
 
-        <div class="dos-col">
-          <div class="tarjeta">
-            <div class="titulo-tarjeta">Citas de hoy</div>
-            {% for cita in citas_hoy_list %}
-            <div class="item-lista">
-              <div class="avatar-mascota" style="background:#E1F5EE">
-                {% if cita.paciente.especie == 'canino' %}🐕{% elif cita.paciente.especie == 'felino' %}🐈{% elif cita.paciente.especie == 'ave' %}🦜{% elif cita.paciente.especie == 'reptil' %}🐢{% elif cita.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
+        <!-- Stats de hoy -->
+        <div class="inicio-stats">
+          <div class="inicio-stat">
+            <div class="inicio-stat-n">{{ stats_consultas.hoy_total }}</div>
+            <div class="inicio-stat-l"><i class="ti ti-calendar-today"></i> Citas hoy</div>
+          </div>
+          <div class="inicio-stat {% if stats_consultas.hoy_en_curso > 0 %}inicio-stat--en-curso{% endif %}">
+            <div class="inicio-stat-n">{{ stats_consultas.hoy_en_curso }}</div>
+            <div class="inicio-stat-l"><i class="ti ti-activity"></i> En consulta ahora</div>
+          </div>
+          <div class="inicio-stat">
+            <div class="inicio-stat-n">{{ stats_consultas.semana }}</div>
+            <div class="inicio-stat-l"><i class="ti ti-calendar-week"></i> Próximos 7 días</div>
+          </div>
+          <div class="inicio-stat {% if seguimientos_vencidos > 0 %}inicio-stat--alerta{% endif %}">
+            <div class="inicio-stat-n">{{ seguimientos_vencidos }}</div>
+            <div class="inicio-stat-l"><i class="ti ti-alarm"></i> Seguim. vencidos</div>
+          </div>
+        </div>
+
+        <!-- Layout principal -->
+        <div class="inicio-layout">
+
+          <!-- Cola del día -->
+          <div class="inicio-cola">
+            <div class="bloque-titulo">
+              <i class="ti ti-list-check"></i> Agenda de hoy
+              {% if stats_consultas.hoy_total > 0 %}
+              <span class="bloque-titulo-sub">{{ stats_consultas.hoy_completadas }}/{{ stats_consultas.hoy_total }} atendidas</span>
+              {% endif %}
+            </div>
+
+            {% for c in citas_hoy_list %}
+            <div class="cita-fila cita-fila--{{ c.estado }}">
+              <div class="cita-dot cita-dot--{{ c.estado }}"></div>
+              <div class="cita-tiempo">{{ c.hora|time:"H:i" }}</div>
+              <div class="cita-emoji">
+                {% if c.paciente.especie == 'canino' %}🐕{% elif c.paciente.especie == 'felino' %}🐈{% elif c.paciente.especie == 'ave' %}🦜{% elif c.paciente.especie == 'reptil' %}🐢{% elif c.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
               </div>
-              <div style="flex:1">
-                <div class="item-nombre">{{ cita.paciente.nombre }}{% if cita.paciente.raza %} — {{ cita.paciente.raza }}{% endif %}</div>
-                <div class="item-detalle">{{ cita.hora|time:"H:i" }} · Tutor: {{ cita.paciente.tutor.nombre }}</div>
+              <div class="cita-datos">
+                <div class="cita-nombre">
+                  {{ c.paciente.nombre }}
+                  {% if c.paciente.raza %}<span class="cita-raza">· {{ c.paciente.raza }}</span>{% endif %}
+                </div>
+                {% if c.paciente.alergias %}
+                <div class="alerta-alergia"><i class="ti ti-alert-triangle"></i> Alergia: {{ c.paciente.alergias }}</div>
+                {% endif %}
+                <div class="cita-motivo-txt">{{ c.motivo }}</div>
+                <div class="cita-meta">{{ c.veterinario.nombre }}{% if c.paciente.tutor.nombre %} · {{ c.paciente.tutor.nombre }}{% endif %}</div>
               </div>
-              <span class="etiq etiq-{% if cita.estado == 'completada' %}verde{% elif cita.estado == 'en_curso' %}azul{% else %}ambar{% endif %}">{{ cita.get_estado_display }}</span>
+              <div class="cita-acciones">
+                {% if c.estado == 'pendiente' %}
+                <form method="post" action="{% url 'consulta_estado' c.pk %}">{% csrf_token %}<input type="hidden" name="estado" value="en_curso"><button class="btn-accion btn-accion-azul"><i class="ti ti-play"></i> Iniciar</button></form>
+                {% elif c.estado == 'en_curso' %}
+                <form method="post" action="{% url 'consulta_estado' c.pk %}">{% csrf_token %}<input type="hidden" name="estado" value="completada"><button class="btn-accion btn-accion-verde"><i class="ti ti-check"></i> Completar</button></form>
+                {% else %}
+                <span class="etiq etiq-verde">Completada</span>
+                {% endif %}
+                <a href="{% url 'consulta_detalle' c.pk %}" class="btn-accion btn-accion-gris"><i class="ti ti-file-text"></i> Ficha</a>
+              </div>
             </div>
             {% empty %}
-            <div class="item-lista" style="justify-content:center">
-              <span style="color:#9ca3af;font-size:13px">Sin citas para hoy.</span>
+            <div class="inicio-vacio">
+              <i class="ti ti-calendar-smile"></i>
+              <div>Sin citas programadas para hoy</div>
+              <span>Puedes revisar los seguimientos pendientes →</span>
             </div>
             {% endfor %}
           </div>
 
-          <div class="tarjeta">
-            <div class="titulo-tarjeta">Pacientes recientes</div>
-            {% for paciente in pacientes_recientes %}
-            <div class="item-lista">
-              <div class="avatar-mascota" style="background:#E6F1FB">
-                {% if paciente.especie == 'canino' %}🐕{% elif paciente.especie == 'felino' %}🐈{% elif paciente.especie == 'ave' %}🦜{% elif paciente.especie == 'reptil' %}🐢{% elif paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
-              </div>
-              <div style="flex:1">
-                <div class="item-nombre">{{ paciente.nombre }}{% if paciente.raza %} — {{ paciente.raza }}{% endif %}</div>
-                <div class="item-detalle">{{ paciente.creado|timesince }} · {{ paciente.consultas.count }} consulta{{ paciente.consultas.count|pluralize:"s" }}</div>
-              </div>
-              <span class="etiq etiq-{% if paciente.especie == 'canino' %}azul{% elif paciente.especie == 'felino' %}morado{% elif paciente.especie == 'ave' %}verde{% elif paciente.especie == 'reptil' %}ambar{% else %}verde{% endif %}">{{ paciente.get_especie_display }}</span>
+          <!-- Sidebar derecho -->
+          <div class="inicio-sidebar">
+
+            <!-- Seguimientos -->
+            {% if seguimientos_pendientes %}
+            <div class="bloque-inicio">
+              <div class="bloque-titulo"><i class="ti ti-alarm"></i> Seguimientos</div>
+              {% for s in seguimientos_pendientes %}
+              <a href="{% url 'consulta_detalle' s.pk %}" class="seg-item seg-item--{% if s.requiere_seguimiento == 'urgente' or s.fecha_proxima_visita < hoy %}critico{% else %}normal{% endif %}">
+                <div class="seg-paciente">
+                  {% if s.paciente.especie == 'canino' %}🐕{% elif s.paciente.especie == 'felino' %}🐈{% elif s.paciente.especie == 'ave' %}🦜{% elif s.paciente.especie == 'reptil' %}🐢{% elif s.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
+                  {{ s.paciente.nombre }}
+                  {% if s.requiere_seguimiento == 'urgente' %}<span class="etiq etiq-rojo" style="font-size:8px;margin-left:3px">Urgente</span>{% endif %}
+                </div>
+                <div class="seg-detalle">
+                  {% if s.fecha_proxima_visita < hoy %}⚠ Vencido — {% elif s.fecha_proxima_visita == hoy %}Hoy — {% endif %}{{ s.fecha_proxima_visita|date:"d M" }}
+                </div>
+              </a>
+              {% endfor %}
             </div>
-            {% empty %}
-            <div class="item-lista" style="justify-content:center">
-              <span style="color:#9ca3af;font-size:13px">Sin pacientes aún.</span>
+            {% endif %}
+
+            <!-- Próximas 48 h -->
+            {% if proximas_48h %}
+            <div class="bloque-inicio">
+              <div class="bloque-titulo"><i class="ti ti-calendar-event"></i> Próximas 48 h</div>
+              {% regroup proximas_48h by fecha as dias_prox %}
+              {% for dia in dias_prox %}
+              <div class="prox-dia">{{ dia.grouper|date:"l d" }}</div>
+              {% for c in dia.list %}
+              <div class="prox-item">
+                <span class="prox-hora">{{ c.hora|time:"H:i" }}</span>
+                <span class="prox-emoji">{% if c.paciente.especie == 'canino' %}🐕{% elif c.paciente.especie == 'felino' %}🐈{% elif c.paciente.especie == 'ave' %}🦜{% elif c.paciente.especie == 'reptil' %}🐢{% elif c.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}</span>
+                <span class="prox-nom">{{ c.paciente.nombre }}</span>
+              </div>
+              {% endfor %}
+              {% endfor %}
             </div>
-            {% endfor %}
-          </div>
-        </div>
+            {% endif %}
+
+            <!-- Vacunas vencidas -->
+            {% if vacunas_vencidas %}
+            <div class="bloque-inicio">
+              <div class="bloque-titulo"><i class="ti ti-vaccine"></i> Vacunas vencidas</div>
+              {% for v in vacunas_vencidas %}
+              <div class="vac-item">
+                <span>{% if v.paciente.especie == 'canino' %}🐕{% elif v.paciente.especie == 'felino' %}🐈{% elif v.paciente.especie == 'ave' %}🦜{% elif v.paciente.especie == 'reptil' %}🐢{% elif v.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %} {{ v.paciente.nombre }}</span>
+                <span class="vac-nombre">{{ v.nombre }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+          </div><!-- fin sidebar -->
+        </div><!-- fin layout -->
       </div>
 
       <!-- ══════════════ PACIENTES ══════════════ -->

@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import ConsultaEditForm, ConsultaForm, CrearUsuarioForm, PacienteForm, TutorForm
-from .models import Consulta, Paciente, PerfilUsuario, Tutor, Veterinario
+from .models import Consulta, Paciente, PerfilUsuario, Tutor, Vacuna, Veterinario
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -153,6 +153,32 @@ def index(request):
         .order_by('requiere_seguimiento', 'fecha_proxima_visita')
     )
 
+    # Saludo según hora del día
+    hora_local = timezone.localtime().hour
+    if hora_local < 12:
+        saludo = 'Buenos días'
+    elif hora_local < 20:
+        saludo = 'Buenas tardes'
+    else:
+        saludo = 'Buenas noches'
+
+    # Datos exclusivos del nuevo Inicio
+    vacunas_vencidas = (
+        Vacuna.objects
+        .filter(proxima_dosis__lt=hoy, proxima_dosis__isnull=False)
+        .select_related('paciente')
+        .order_by('proxima_dosis')[:6]
+    )
+    proximas_48h = (
+        Consulta.objects
+        .filter(fecha__in=[hoy + timedelta(1), hoy + timedelta(2)])
+        .select_related('paciente', 'veterinario')
+        .order_by('fecha', 'hora')
+    )
+    seguimientos_vencidos = seguimientos_pendientes.filter(
+        fecha_proxima_visita__lt=hoy
+    ).count()
+
     # Stats detalladas para el panel de consultas
     stats_consultas = {
         'hoy_total':      consultas_hoy.count(),
@@ -174,21 +200,19 @@ def index(request):
     context = {
         'perfil': perfil,
         'hoy': hoy,
-        # dashboard stats
-        'total_pacientes': Paciente.objects.filter(estado__in=['activo', 'seguimiento', 'urgente']).count(),
-        'total_tutores':   Tutor.objects.count(),
-        'citas_hoy':       consultas_hoy.count(),
-        'citas_pendientes':consultas_hoy.filter(estado='pendiente').count(),
-        'seguimientos':    Paciente.objects.filter(estado='seguimiento').count(),
-        'urgentes':        Paciente.objects.filter(estado='urgente').count(),
-        # listas dashboard
+        # inicio — datos del día
+        'saludo':                saludo,
         'citas_hoy_list': (
             Consulta.objects
             .filter(fecha=hoy)
             .select_related('paciente__tutor', 'veterinario')
             .order_by('hora')
         ),
-        'pacientes_recientes': Paciente.objects.select_related('tutor').order_by('-creado')[:5],
+        'vacunas_vencidas':      vacunas_vencidas,
+        'proximas_48h':          proximas_48h,
+        'seguimientos_vencidos': seguimientos_vencidos,
+        # pacientes panel
+        'total_pacientes': Paciente.objects.filter(estado__in=['activo', 'seguimiento', 'urgente']).count(),
         # pacientes
         'caninos': Paciente.objects.filter(especie='canino').count(),
         'felinos': Paciente.objects.filter(especie='felino').count(),

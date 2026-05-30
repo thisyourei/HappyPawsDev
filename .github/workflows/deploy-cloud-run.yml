@@ -40,6 +40,7 @@ jobs:
             --region ${{ secrets.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
+            --service-account yiokai-as@happypawschl.iam.gserviceaccount.com \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
             --set-env-vars "\
               DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},\
@@ -56,6 +57,7 @@ jobs:
           gcloud run jobs deploy happypaws-migrate \
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/happypaws-app:${{ github.sha }} \
             --region ${{ secrets.GCP_REGION }} \
+            --service-account yiokai-as@happypawschl.iam.gserviceaccount.com \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
             --set-env-vars "\
               DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},\

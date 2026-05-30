@@ -522,6 +522,185 @@ body {
 [data-theme="dark"] .error-box { background: #450a0a; border-color: #b91c1c; color: #fca5a5; }
 
 /* ══════════════════════════════════════════════════════
+   INICIO — dashboard clínico
+══════════════════════════════════════════════════════ */
+
+/* Saludo */
+.inicio-saludo-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.inicio-fecha {
+  font-size: 11px; color: var(--text-secondary);
+  text-transform: capitalize; letter-spacing: 0.02em;
+}
+.inicio-saludo-txt {
+  font-size: 17px; font-weight: 700; color: var(--text-primary); margin-top: 2px;
+}
+.inicio-resumen {
+  font-size: 12px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 7px;
+}
+.inicio-resumen .sep { color: var(--border-secondary); }
+
+/* Stats row */
+.inicio-stats {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 10px; margin-bottom: 14px;
+}
+.inicio-stat {
+  background: var(--bg-primary); border: 1px solid var(--border);
+  border-left: 3px solid var(--border-secondary);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  transition: border-left-color 0.2s;
+}
+.inicio-stat--en-curso { border-left-color: var(--accent); }
+.inicio-stat--alerta   { border-left-color: #ef4444; }
+.inicio-stat-n { font-size: 26px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+.inicio-stat-l {
+  font-size: 11px; color: var(--text-secondary);
+  margin-top: 5px; display: flex; align-items: center; gap: 4px;
+}
+
+/* Layout 60/40 */
+.inicio-layout {
+  display: grid; grid-template-columns: 1fr 230px;
+  gap: 12px; align-items: start;
+}
+
+/* Cola del día */
+.inicio-cola {
+  background: var(--bg-primary); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+}
+
+.bloque-titulo {
+  font-size: 10px; font-weight: 700; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.bloque-titulo-sub {
+  margin-left: auto; font-size: 11px; font-weight: 500;
+  color: var(--text-secondary); text-transform: none; letter-spacing: 0;
+}
+
+/* Fila de cita */
+.cita-fila {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 8px 10px 6px;
+  border-radius: var(--radius-md);
+  border-left: 3px solid transparent;
+  margin-bottom: 3px;
+  transition: background 0.1s;
+}
+.cita-fila:last-child { margin-bottom: 0; }
+.cita-fila:hover:not(.cita-fila--en-curso) { background: var(--bg-secondary); }
+
+.cita-fila--pendiente  { border-left-color: #f59e0b; }
+.cita-fila--en-curso   { background: var(--accent-light); border-left-color: var(--accent); }
+.cita-fila--en-curso:hover { background: var(--accent-light); filter: brightness(0.97); }
+.cita-fila--completada { opacity: 0.5; }
+
+.cita-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.cita-dot--pendiente  { background: #f59e0b; }
+.cita-dot--en-curso   {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.cita-dot--completada { background: #22c55e; }
+
+.cita-tiempo {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  min-width: 42px; flex-shrink: 0; line-height: 1.4;
+}
+.cita-emoji { font-size: 20px; flex-shrink: 0; line-height: 1.4; }
+.cita-datos { flex: 1; min-width: 0; }
+.cita-nombre {
+  font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+}
+.cita-raza {
+  font-size: 12px; font-weight: 400; color: var(--text-secondary);
+}
+.cita-motivo-txt {
+  font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px;
+}
+.cita-meta {
+  font-size: 11px; color: var(--text-tertiary); margin-top: 3px;
+}
+.cita-acciones {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 4px; flex-shrink: 0;
+}
+
+/* Estado vacío */
+.inicio-vacio {
+  text-align: center; padding: 36px 20px; color: var(--text-tertiary);
+}
+.inicio-vacio i { font-size: 30px; display: block; margin-bottom: 8px; }
+.inicio-vacio div  { font-size: 14px; font-weight: 600; margin-bottom: 3px; color: var(--text-secondary); }
+.inicio-vacio span { font-size: 12px; }
+
+/* Sidebar */
+.inicio-sidebar { display: flex; flex-direction: column; gap: 10px; }
+.bloque-inicio {
+  background: var(--bg-primary); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 12px 14px;
+}
+
+/* Seguimientos */
+.seg-item {
+  display: block; text-decoration: none;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  border-left: 3px solid;
+  margin-bottom: 5px; transition: filter 0.12s;
+}
+.seg-item:last-child { margin-bottom: 0; }
+.seg-item:hover { filter: brightness(0.95); }
+.seg-item--critico { background: #fee2e2; border-left-color: #ef4444; }
+.seg-item--normal  { background: #fef3c7; border-left-color: #f59e0b; }
+[data-theme="dark"] .seg-item--critico { background: #450a0a; border-left-color: #dc2626; }
+[data-theme="dark"] .seg-item--normal  { background: #451a03; border-left-color: #d97706; }
+.seg-paciente {
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+.seg-detalle  { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+/* Próximas 48 h */
+.prox-dia {
+  font-size: 9px; font-weight: 700; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin: 8px 0 4px; text-capitalize: capitalize;
+}
+.prox-dia:first-child { margin-top: 0; }
+.prox-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.prox-item:last-child { border-bottom: none; }
+.prox-hora  { color: var(--accent); font-weight: 700; font-size: 11px; min-width: 36px; flex-shrink: 0; }
+.prox-emoji { font-size: 14px; flex-shrink: 0; }
+.prox-nom   { color: var(--text-primary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Vacunas vencidas */
+.vac-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px; color: var(--text-primary); gap: 8px;
+}
+.vac-item:last-child { border-bottom: none; }
+.vac-nombre {
+  font-size: 10px; color: var(--text-secondary);
+  text-align: right; white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════
    PRINT (detalle consulta)
 ══════════════════════════════════════════════════════ */
 @media print {
