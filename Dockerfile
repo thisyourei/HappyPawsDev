@@ -1,13 +1,18 @@
 FROM python:3.12-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
+
 WORKDIR /app
 
-COPY backend/requirements.txt ./backend/requirements.txt
-COPY backend/app.py ./backend/app.py
-COPY home ./home
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -m pip install --no-cache-dir -r backend/requirements.txt
+COPY . .
 
-EXPOSE 5000
+RUN python manage.py collectstatic --noinput
 
-CMD ["python", "backend/app.py"]
+EXPOSE 8080
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "60", "happypaws.wsgi:application"]

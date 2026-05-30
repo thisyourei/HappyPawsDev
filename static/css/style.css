@@ -350,3 +350,11 @@ body {
 }
 .btn-form:hover { background: var(--border); }
 .btn-form.activo { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── ALERTAS ── */
+.alerta-exito {
+  background: #EAF3DE; border: 1px solid #3B6D11; color: #3B6D11;
+  border-radius: var(--radius-md); padding: 10px 16px;
+  margin-bottom: 14px; font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+}

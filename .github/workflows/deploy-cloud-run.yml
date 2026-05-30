@@ -14,12 +14,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
       - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
 
       - name: Configure Docker authentication
         run: gcloud auth configure-docker gcr.io
@@ -37,7 +40,35 @@ jobs:
             --region ${{ secrets.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
+            --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --set-env-vars "\
+              DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},\
+              DB_NAME=${{ secrets.DB_NAME }},\
+              DB_USER=${{ secrets.DB_USER }},\
+              DB_PASSWORD=${{ secrets.DB_PASSWORD }},\
+              CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},\
+              DJANGO_ALLOWED_HOSTS=.run.app,\
+              DEBUG=False" \
             --quiet
+
+      - name: Run database migrations
+        run: |
+          gcloud run jobs create happypaws-migrate-${{ github.run_number }} \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/happypaws-app:${{ github.sha }} \
+            --region ${{ secrets.GCP_REGION }} \
+            --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
+            --set-env-vars "\
+              DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},\
+              DB_NAME=${{ secrets.DB_NAME }},\
+              DB_USER=${{ secrets.DB_USER }},\
+              DB_PASSWORD=${{ secrets.DB_PASSWORD }},\
+              CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},\
+              DEBUG=False" \
+            --command python \
+            --args "manage.py,migrate" \
+            --execute-now \
+            --wait \
+            --quiet || true
 
       - name: Print Cloud Run URL
         run: gcloud run services describe happypaws-app --region ${{ secrets.GCP_REGION }} --format='value(status.url)'

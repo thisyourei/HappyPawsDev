@@ -3,7 +3,7 @@ const titulos = {
   pacientes: 'Pacientes',
   tutores: 'Tutores',
   consultas: 'Consultas',
-  perfil: 'Perfil — Rocky',
+  perfil: 'Perfil — Paciente',
   nuevo: 'Nuevo registro'
 };
 
@@ -32,6 +32,8 @@ function mostrarFormulario(id, btn) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Inicialización opcional: asegurar la pantalla por defecto
-  // ya está marcada en el HTML; si se desea, se puede aplicar lógica adicional aquí.
+  // Auto-dismiss success alerts after 4 seconds
+  document.querySelectorAll('.alerta-exito').forEach(el => {
+    setTimeout(() => el.remove(), 4000);
+  });
 });

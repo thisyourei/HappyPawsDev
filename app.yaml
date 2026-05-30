@@ -1,2 +1,10 @@
 runtime: python312
-entrypoint: gunicorn -b :$PORT backend.app:app
+entrypoint: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 60 happypaws.wsgi:application
+
+env_variables:
+  DEBUG: "False"
+  DJANGO_ALLOWED_HOSTS: ".appspot.com,.run.app"
+
+# Configura la instancia de Cloud SQL (formato: proyecto:region:instancia)
+beta_settings:
+  cloud_sql_instances: "happypawschl:REGION:NOMBRE_INSTANCIA"

@@ -1,0 +1,459 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HappyPaws — Sistema de Gestión</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-marca">
+        <i class="ti ti-paw" style="font-size:22px;color:#185FA5"></i>
+        <span class="logo-titulo">HappyPaws</span>
+      </div>
+      <div class="logo-sub">Sistema de gestión</div>
+    </div>
+
+    <div class="nav-seccion">Principal</div>
+    <div class="nav-item activo" onclick="mostrarPantalla('inicio',this)">
+      <i class="ti ti-layout-dashboard"></i> Inicio
+    </div>
+    <div class="nav-item" onclick="mostrarPantalla('pacientes',this)">
+      <i class="ti ti-paw"></i> Pacientes
+    </div>
+    <div class="nav-item" onclick="mostrarPantalla('tutores',this)">
+      <i class="ti ti-users"></i> Tutores
+    </div>
+
+    <div class="nav-seccion">Clínica</div>
+    <div class="nav-item" onclick="mostrarPantalla('consultas',this)">
+      <i class="ti ti-stethoscope"></i> Consultas
+    </div>
+    <div class="nav-item" onclick="mostrarPantalla('nuevo',this)">
+      <i class="ti ti-plus"></i> Nuevo registro
+    </div>
+
+    <div class="nav-spacer"></div>
+    <div class="nav-item"><i class="ti ti-settings"></i> Configuración</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-titulo" id="topbar-titulo">Inicio</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="buscador">
+          <i class="ti ti-search" style="font-size:13px"></i>
+          Buscar paciente o tutor...
+        </div>
+        <button class="btn-principal" onclick="mostrarPantalla('nuevo', document.querySelectorAll('.nav-item')[4])">
+          <i class="ti ti-plus"></i> Nuevo
+        </button>
+      </div>
+    </div>
+
+    <div class="contenido">
+
+      {% if messages %}
+      {% for message in messages %}
+      <div class="alerta-exito"><i class="ti ti-check"></i> {{ message }}</div>
+      {% endfor %}
+      {% endif %}
+
+      <!-- ══════════════ INICIO ══════════════ -->
+      <div class="pantalla activa" id="pantalla-inicio">
+        <div class="grilla-stats">
+          <div class="tarjeta-stat">
+            <div class="stat-etiqueta"><i class="ti ti-paw"></i> Pacientes activos</div>
+            <div class="stat-valor">{{ total_pacientes }}</div>
+            <div class="stat-sub">registrados en el sistema</div>
+          </div>
+          <div class="tarjeta-stat">
+            <div class="stat-etiqueta"><i class="ti ti-users"></i> Tutores registrados</div>
+            <div class="stat-valor">{{ total_tutores }}</div>
+            <div class="stat-sub">en la base de datos</div>
+          </div>
+          <div class="tarjeta-stat">
+            <div class="stat-etiqueta"><i class="ti ti-calendar"></i> Citas hoy</div>
+            <div class="stat-valor">{{ citas_hoy }}</div>
+            <div class="stat-sub">{{ citas_pendientes }} pendiente{{ citas_pendientes|pluralize:"s" }}</div>
+          </div>
+          <div class="tarjeta-stat">
+            <div class="stat-etiqueta"><i class="ti ti-alert-circle"></i> Seguimientos</div>
+            <div class="stat-valor">{{ seguimientos }}</div>
+            <div class="stat-sub">{{ urgentes }} urgente{{ urgentes|pluralize:"s" }}</div>
+          </div>
+        </div>
+
+        <div class="dos-col">
+          <div class="tarjeta">
+            <div class="titulo-tarjeta">Citas de hoy</div>
+            {% for cita in citas_hoy_list %}
+            <div class="item-lista">
+              <div class="avatar-mascota" style="background:#E1F5EE">
+                {% if cita.paciente.especie == 'canino' %}🐕{% elif cita.paciente.especie == 'felino' %}🐈{% elif cita.paciente.especie == 'ave' %}🦜{% elif cita.paciente.especie == 'reptil' %}🐢{% elif cita.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
+              </div>
+              <div style="flex:1">
+                <div class="item-nombre">{{ cita.paciente.nombre }}{% if cita.paciente.raza %} — {{ cita.paciente.raza }}{% endif %}</div>
+                <div class="item-detalle">{{ cita.hora|time:"H:i" }} · Tutor: {{ cita.paciente.tutor.nombre }}</div>
+              </div>
+              <span class="etiq etiq-{% if cita.estado == 'completada' %}verde{% elif cita.estado == 'en_curso' %}azul{% else %}ambar{% endif %}">
+                {{ cita.get_estado_display }}
+              </span>
+            </div>
+            {% empty %}
+            <div class="item-lista" style="justify-content:center">
+              <span style="color:#9ca3af;font-size:13px">Sin citas para hoy.</span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="tarjeta">
+            <div class="titulo-tarjeta">Pacientes recientes</div>
+            {% for paciente in pacientes_recientes %}
+            <div class="item-lista">
+              <div class="avatar-mascota" style="background:#E6F1FB">
+                {% if paciente.especie == 'canino' %}🐕{% elif paciente.especie == 'felino' %}🐈{% elif paciente.especie == 'ave' %}🦜{% elif paciente.especie == 'reptil' %}🐢{% elif paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
+              </div>
+              <div style="flex:1">
+                <div class="item-nombre">{{ paciente.nombre }}{% if paciente.raza %} — {{ paciente.raza }}{% endif %}</div>
+                <div class="item-detalle">{{ paciente.creado|timesince }} · {{ paciente.consultas.count }} consulta{{ paciente.consultas.count|pluralize:"s" }}</div>
+              </div>
+              <span class="etiq etiq-{% if paciente.especie == 'canino' %}azul{% elif paciente.especie == 'felino' %}morado{% elif paciente.especie == 'ave' %}verde{% elif paciente.especie == 'reptil' %}ambar{% else %}verde{% endif %}">
+                {{ paciente.get_especie_display }}
+              </span>
+            </div>
+            {% empty %}
+            <div class="item-lista" style="justify-content:center">
+              <span style="color:#9ca3af;font-size:13px">Sin pacientes aún. <a href="#" onclick="mostrarPantalla('nuevo', document.querySelectorAll('.nav-item')[4]);return false;" style="color:#185FA5">Registrar primero.</a></span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ PACIENTES ══════════════ -->
+      <div class="pantalla" id="pantalla-pacientes">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <span class="etiq etiq-azul" style="padding:5px 14px;cursor:pointer;font-size:11px">Todos ({{ total_pacientes }})</span>
+          <span class="etiq etiq-gris" style="padding:5px 14px;cursor:pointer;font-size:11px">Caninos ({{ caninos }})</span>
+          <span class="etiq etiq-gris" style="padding:5px 14px;cursor:pointer;font-size:11px">Felinos ({{ felinos }})</span>
+          <span class="etiq etiq-gris" style="padding:5px 14px;cursor:pointer;font-size:11px">Otros ({{ otros }})</span>
+        </div>
+        <div class="tarjeta" style="padding:0;overflow:hidden">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Paciente</th>
+                <th>Especie / Raza</th>
+                <th>Tutor/a</th>
+                <th>Última visita</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for paciente in pacientes %}
+              <tr class="clickable" onclick="mostrarPantalla('perfil',null)">
+                <td>
+                  <div class="en-linea">
+                    <span style="font-size:20px">
+                      {% if paciente.especie == 'canino' %}🐕{% elif paciente.especie == 'felino' %}🐈{% elif paciente.especie == 'ave' %}🦜{% elif paciente.especie == 'reptil' %}🐢{% elif paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
+                    </span>
+                    <div>
+                      <div style="font-weight:600">{{ paciente.nombre }}</div>
+                      <div style="font-size:11px;color:#6b7280">
+                        {{ paciente.get_sexo_display|first }} ·
+                        {% if paciente.fecha_nacimiento %}{{ paciente.fecha_nacimiento|timesince }}{% else %}edad desconocida{% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="etiq etiq-{% if paciente.especie == 'canino' %}azul{% elif paciente.especie == 'felino' %}morado{% elif paciente.especie == 'ave' %}verde{% elif paciente.especie == 'reptil' %}ambar{% else %}verde{% endif %}">
+                    {{ paciente.get_especie_display }}
+                  </span>
+                  {% if paciente.raza %}<span style="font-size:12px"> {{ paciente.raza }}</span>{% endif %}
+                </td>
+                <td>{{ paciente.tutor.nombre }}</td>
+                <td>{% if paciente.ultima_visita %}{{ paciente.ultima_visita|timesince }}{% else %}Sin visitas{% endif %}</td>
+                <td>
+                  <span class="etiq etiq-{% if paciente.estado == 'activo' %}verde{% elif paciente.estado == 'seguimiento' %}ambar{% elif paciente.estado == 'urgente' %}rojo{% else %}gris{% endif %}">
+                    {{ paciente.get_estado_display }}
+                  </span>
+                </td>
+                <td><i class="ti ti-chevron-right" style="font-size:14px;color:#9ca3af"></i></td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" style="text-align:center;color:#9ca3af;padding:30px">
+                  No hay pacientes registrados aún.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════ PERFIL PACIENTE ══════════════ -->
+      <div class="pantalla" id="pantalla-perfil">
+        <div class="perfil-header">
+          <div class="avatar-perfil">🐾</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <span style="font-size:20px;font-weight:700;color:#111827">Selecciona un paciente</span>
+            </div>
+            <div class="perfil-meta">
+              <span class="meta-item">Haz clic en cualquier fila de la lista de Pacientes para ver el perfil completo.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ TUTORES ══════════════ -->
+      <div class="pantalla" id="pantalla-tutores">
+        <div class="tarjeta" style="padding:0;overflow:hidden">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Correo electrónico</th>
+                <th>Mascotas</th>
+                <th>Última visita</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tutor in tutores %}
+              <tr class="clickable">
+                <td>
+                  <div class="en-linea">
+                    <div class="avatar-tutor" style="width:32px;height:32px;font-size:11px">{{ tutor.nombre|slice:":2"|upper }}</div>
+                    <span style="font-weight:600">{{ tutor.nombre }}</span>
+                  </div>
+                </td>
+                <td style="font-size:12px">{{ tutor.telefono|default:"—" }}</td>
+                <td style="font-size:12px">{{ tutor.email|default:"—" }}</td>
+                <td>
+                  {% for paciente in tutor.pacientes.all %}
+                  <span class="etiq etiq-{% if paciente.especie == 'canino' %}azul{% elif paciente.especie == 'felino' %}morado{% elif paciente.estado == 'urgente' %}rojo{% else %}verde{% endif %}">{{ paciente.nombre }}</span>
+                  {% empty %}
+                  <span style="color:#9ca3af;font-size:12px">Sin mascotas</span>
+                  {% endfor %}
+                </td>
+                <td>{% if tutor.ultima_visita %}{{ tutor.ultima_visita|timesince }}{% else %}Sin visitas{% endif %}</td>
+                <td><i class="ti ti-chevron-right" style="font-size:14px;color:#9ca3af"></i></td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" style="text-align:center;color:#9ca3af;padding:30px">No hay tutores registrados aún.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════ CONSULTAS ══════════════ -->
+      <div class="pantalla" id="pantalla-consultas">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+          <div class="tarjeta-stat">
+            <div class="stat-etiqueta">Consultas este mes</div>
+            <div class="stat-valor">{{ consultas_mes }}</div>
+          </div>
+          <div class="tarjeta-stat">
+            <div class="stat-etiqueta">Promedio diario</div>
+            <div class="stat-valor">{{ promedio_diario }}</div>
+          </div>
+          <div class="tarjeta-stat">
+            <div class="stat-etiqueta">Pendientes hoy</div>
+            <div class="stat-valor">{{ consultas_pendientes_hoy }}</div>
+          </div>
+        </div>
+        <div class="tarjeta" style="padding:0;overflow:hidden">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Fecha y hora</th>
+                <th>Paciente</th>
+                <th>Motivo</th>
+                <th>Veterinario/a</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for consulta in consultas %}
+              <tr>
+                <td>{{ consulta.fecha|date:"d M Y" }} · {{ consulta.hora|time:"H:i" }}</td>
+                <td>
+                  {% if consulta.paciente.especie == 'canino' %}🐕{% elif consulta.paciente.especie == 'felino' %}🐈{% elif consulta.paciente.especie == 'ave' %}🦜{% elif consulta.paciente.especie == 'reptil' %}🐢{% elif consulta.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
+                  {{ consulta.paciente.nombre }}
+                </td>
+                <td>{{ consulta.motivo }}</td>
+                <td>{{ consulta.veterinario.nombre }}</td>
+                <td>
+                  <span class="etiq etiq-{% if consulta.estado == 'completada' %}verde{% elif consulta.estado == 'en_curso' %}azul{% else %}ambar{% endif %}">
+                    {{ consulta.get_estado_display }}
+                  </span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" style="text-align:center;color:#9ca3af;padding:30px">No hay consultas registradas aún.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════ NUEVO REGISTRO ══════════════ -->
+      <div class="pantalla" id="pantalla-nuevo">
+        <div class="selector-form">
+          <button class="btn-form activo" onclick="mostrarFormulario('form-paciente',this)">🐾 Nuevo paciente</button>
+          <button class="btn-form" onclick="mostrarFormulario('form-tutor',this)">👤 Nuevo tutor</button>
+          <button class="btn-form" onclick="mostrarFormulario('form-consulta',this)">🩺 Nueva consulta</button>
+        </div>
+
+        <div class="tarjeta">
+
+          <!-- FORMULARIO PACIENTE -->
+          <div id="form-paciente" class="contenido-form activo">
+            <form method="post" action="{% url 'index' %}">
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="paciente">
+              <div class="grilla-form">
+                <div class="grupo-titulo">Datos del paciente</div>
+                <div class="campo"><label>Nombre</label><input type="text" name="nombre" placeholder="Ej: Rocky" required></div>
+                <div class="campo"><label>Especie</label>
+                  <select name="especie">
+                    <option value="canino">Canino</option>
+                    <option value="felino">Felino</option>
+                    <option value="ave">Ave</option>
+                    <option value="reptil">Reptil</option>
+                    <option value="roedor">Roedor</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div class="campo"><label>Raza</label><input type="text" name="raza" placeholder="Ej: Labrador Retriever"></div>
+                <div class="campo"><label>Sexo</label>
+                  <select name="sexo"><option value="M">Macho</option><option value="F">Hembra</option></select>
+                </div>
+                <div class="campo"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento"></div>
+                <div class="campo"><label>Peso (kg)</label><input type="number" name="peso" placeholder="0.0" step="0.1" min="0"></div>
+                <div class="campo"><label>Color / pelaje</label><input type="text" name="color" placeholder="Ej: Dorado"></div>
+                <div class="campo"><label>N.º de microchip</label><input type="text" name="microchip" placeholder="15 dígitos"></div>
+                <div class="campo campo-completo"><label>Alergias conocidas</label><input type="text" name="alergias" placeholder="Ej: penicilina, abejas (separar con coma)"></div>
+                <div class="campo campo-completo"><label>Observaciones</label><textarea name="observaciones" placeholder="Notas adicionales sobre el paciente..."></textarea></div>
+                <div class="grupo-titulo">Tutor responsable</div>
+                <div class="campo">
+                  <label>Seleccionar tutor</label>
+                  <select name="tutor" required>
+                    <option value="">— Seleccionar —</option>
+                    {% for t in tutores %}
+                    <option value="{{ t.id }}">{{ t.nombre }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="acciones-form">
+                <button type="button" class="btn-secundario" onclick="mostrarPantalla('inicio', document.querySelectorAll('.nav-item')[0])">Cancelar</button>
+                <button type="submit" class="btn-principal"><i class="ti ti-check"></i> Registrar paciente</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- FORMULARIO TUTOR -->
+          <div id="form-tutor" class="contenido-form">
+            <form method="post" action="{% url 'index' %}">
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="tutor">
+              <div class="grilla-form">
+                <div class="grupo-titulo">Datos del tutor</div>
+                <div class="campo"><label>Nombre completo</label><input type="text" name="nombre" placeholder="Ej: Carlos Méndez" required></div>
+                <div class="campo"><label>RUT / DNI</label><input type="text" name="rut" placeholder="Ej: 12.345.678-9"></div>
+                <div class="campo"><label>Teléfono</label><input type="tel" name="telefono" placeholder="+56 9 XXXX XXXX"></div>
+                <div class="campo"><label>Correo electrónico</label><input type="email" name="email" placeholder="correo@email.com"></div>
+                <div class="campo campo-completo"><label>Dirección</label><input type="text" name="direccion" placeholder="Calle, número, ciudad"></div>
+                <div class="campo"><label>Ciudad</label><input type="text" name="ciudad" placeholder="Santiago"></div>
+                <div class="campo"><label>Contacto de emergencia</label><input type="tel" name="contacto_emergencia" placeholder="+56 9 XXXX XXXX"></div>
+                <div class="campo campo-completo"><label>Observaciones</label><textarea name="observaciones" placeholder="Notas sobre el tutor..."></textarea></div>
+              </div>
+              <div class="acciones-form">
+                <button type="button" class="btn-secundario" onclick="mostrarPantalla('inicio', document.querySelectorAll('.nav-item')[0])">Cancelar</button>
+                <button type="submit" class="btn-principal"><i class="ti ti-check"></i> Registrar tutor</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- FORMULARIO CONSULTA -->
+          <div id="form-consulta" class="contenido-form">
+            <form method="post" action="{% url 'index' %}">
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="consulta">
+              <div class="grilla-form">
+                <div class="grupo-titulo">Datos de la consulta</div>
+                <div class="campo">
+                  <label>Paciente</label>
+                  <select name="paciente" required>
+                    <option value="">— Seleccionar paciente —</option>
+                    {% for p in pacientes %}
+                    <option value="{{ p.id }}">{{ p.nombre }} — {{ p.get_especie_display }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo">
+                  <label>Veterinario/a</label>
+                  <select name="veterinario" required>
+                    <option value="">— Seleccionar —</option>
+                    {% for v in veterinarios %}
+                    <option value="{{ v.id }}">{{ v.nombre }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="campo"><label>Fecha</label><input type="date" name="fecha" required></div>
+                <div class="campo"><label>Hora</label><input type="time" name="hora" required></div>
+                <div class="campo campo-completo"><label>Motivo de consulta</label><input type="text" name="motivo" placeholder="Ej: control rutinario, vómitos, revisión ortopédica..." required></div>
+                <div class="campo"><label>Peso en esta visita (kg)</label><input type="number" name="peso_visita" step="0.1" min="0" placeholder="0.0"></div>
+                <div class="campo"><label>Temperatura (°C)</label><input type="number" name="temperatura" step="0.1" min="0" placeholder="38.5"></div>
+                <div class="campo campo-completo"><label>Diagnóstico</label><textarea name="diagnostico" placeholder="Diagnóstico clínico..."></textarea></div>
+                <div class="campo campo-completo"><label>Tratamiento / prescripción</label><textarea name="tratamiento" placeholder="Medicamentos, dosis, instrucciones para el tutor..."></textarea></div>
+                <div class="grupo-titulo">Seguimiento</div>
+                <div class="campo">
+                  <label>¿Requiere seguimiento?</label>
+                  <select name="requiere_seguimiento">
+                    <option value="no">No</option>
+                    <option value="programada">Sí — próxima cita programada</option>
+                    <option value="urgente">Sí — urgente</option>
+                  </select>
+                </div>
+                <div class="campo"><label>Fecha próxima visita</label><input type="date" name="fecha_proxima_visita"></div>
+                <div class="campo campo-completo"><label>Indicaciones para el tutor</label><textarea name="indicaciones_tutor" placeholder="Cuidados en casa, señales de alerta, dieta especial..."></textarea></div>
+              </div>
+              <div class="acciones-form">
+                <button type="button" class="btn-secundario" onclick="mostrarPantalla('inicio', document.querySelectorAll('.nav-item')[0])">Cancelar</button>
+                <button type="submit" class="btn-principal"><i class="ti ti-check"></i> Guardar consulta</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- fin contenido -->
+  </div><!-- fin main -->
+</div><!-- fin app -->
+
+</body>
+</html>
