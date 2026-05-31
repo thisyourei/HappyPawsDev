@@ -60,6 +60,7 @@ jobs:
           ENV_VARS="${ENV_VARS},DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
           ENV_VARS="${ENV_VARS},CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}"
           ENV_VARS="${ENV_VARS},DEBUG=False"
+          gcloud run jobs delete happypaws-migrate --region ${{ secrets.GCP_REGION }} --quiet 2>/dev/null || true
           gcloud run jobs deploy happypaws-migrate \
             --image southamerica-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/happypaws/happypaws-app:${{ github.sha }} \
             --region ${{ secrets.GCP_REGION }} \
