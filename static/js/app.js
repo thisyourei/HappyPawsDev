@@ -3,8 +3,17 @@
 ══════════════════════════════════════════════════ */
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
   sidebar.classList.toggle('colapsado');
-  localStorage.setItem('hp-sidebar', sidebar.classList.contains('colapsado') ? '0' : '1');
+  const abierto = !sidebar.classList.contains('colapsado');
+
+  // El overlay solo importa en móvil; lo activamos según el estado
+  if (overlay) overlay.classList.toggle('activo', abierto);
+
+  // En escritorio recordamos la preferencia; en móvil siempre arranca cerrado
+  if (window.innerWidth > 768) {
+    localStorage.setItem('hp-sidebar', abierto ? '1' : '0');
+  }
 }
 
 /* ══════════════════════════════════════════════════
@@ -55,6 +64,16 @@ function mostrarPantalla(id, el) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('activo'));
     el.classList.add('activo');
   }
+
+  // En móvil, cerrar el sidebar al elegir una opción
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar && !sidebar.classList.contains('colapsado')) {
+      sidebar.classList.add('colapsado');
+      if (overlay) overlay.classList.remove('activo');
+    }
+  }
 }
 
 
@@ -79,15 +98,16 @@ function mostrarTabConsulta(id, el) {
    INIT
 ══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  // Restaurar estado del sidebar
-  const sidebarAbierto = localStorage.getItem('hp-sidebar');
-  if (sidebarAbierto === '0') {
-    document.getElementById('sidebar')?.classList.add('colapsado');
-  }
-
-  // En móvil, colapsar por defecto si no hay preferencia guardada
-  if (sidebarAbierto === null && window.innerWidth <= 640) {
-    document.getElementById('sidebar')?.classList.add('colapsado');
+  // Estado inicial del sidebar
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    if (window.innerWidth <= 768) {
+      // En móvil siempre arranca cerrado (flota sobre el contenido)
+      sidebar.classList.add('colapsado');
+    } else if (localStorage.getItem('hp-sidebar') === '0') {
+      // En escritorio respetamos la preferencia guardada
+      sidebar.classList.add('colapsado');
+    }
   }
 
   // Sincronizar icono con el tema ya aplicado (anti-flash lo aplicó antes)

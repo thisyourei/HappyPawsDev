@@ -15,9 +15,15 @@
 
 <div class="app">
 
+  <!-- Overlay para cerrar el sidebar en móvil -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
   <!-- ── SIDEBAR ─────────────────────────────────────────── -->
   <div class="sidebar" id="sidebar">
     <div class="logo">
+      <button class="btn-sidebar-cerrar" onclick="toggleSidebar()" title="Cerrar menú">
+        <i class="ti ti-x"></i>
+      </button>
       <div class="logo-marca">
         <i class="ti ti-paw" style="font-size:22px;color:#185FA5"></i>
         <span class="logo-titulo">HappyPaws</span>
