@@ -9,7 +9,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
-from .forms import ConsultaEditForm, ConsultaForm, CrearUsuarioForm, PacienteForm, TutorForm
+from .forms import (
+    ConsultaEditForm,
+    ConsultaForm,
+    CrearUsuarioForm,
+    PacienteEditForm,
+    PacienteForm,
+    TutorForm,
+)
 from .models import Consulta, Paciente, PerfilUsuario, Tutor, Vacuna, Veterinario
 
 
@@ -286,6 +293,72 @@ def consulta_detalle(request, pk):
         'total_consultas':  historial_paciente.count() + 1,
     }
     return render(request, 'clinica/consulta_detalle.html', context)
+
+
+# ── Paciente / Tutor edición ──────────────────────────────────────────────────
+
+@login_required
+def paciente_editar(request, pk):
+    perfil = _get_or_create_perfil(request.user)
+    if perfil is None:
+        return redirect('login')
+    if not perfil.puede_registrar:
+        messages.error(request, 'Sin permiso para editar pacientes.')
+        return redirect('index')
+
+    paciente = get_object_or_404(Paciente.objects.select_related('tutor'), pk=pk)
+
+    if request.method == 'POST':
+        form = PacienteEditForm(request.POST, instance=paciente)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Paciente {paciente.nombre} actualizado correctamente.')
+            return redirect(f"{reverse('index')}?pantalla=pacientes")
+    else:
+        form = PacienteEditForm(instance=paciente)
+
+    context = {
+        'perfil':    perfil,
+        'paciente':  paciente,
+        'form':      form,
+        'tutores':   Tutor.objects.order_by('nombre'),
+        'consultas': (
+            Consulta.objects
+            .filter(paciente=paciente)
+            .select_related('veterinario')
+            .order_by('-fecha', '-hora')
+        ),
+    }
+    return render(request, 'clinica/paciente_editar.html', context)
+
+
+@login_required
+def tutor_editar(request, pk):
+    perfil = _get_or_create_perfil(request.user)
+    if perfil is None:
+        return redirect('login')
+    if not perfil.puede_registrar:
+        messages.error(request, 'Sin permiso para editar tutores.')
+        return redirect('index')
+
+    tutor = get_object_or_404(Tutor, pk=pk)
+
+    if request.method == 'POST':
+        form = TutorForm(request.POST, instance=tutor)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Tutor {tutor.nombre} actualizado correctamente.')
+            return redirect(f"{reverse('index')}?pantalla=tutores")
+    else:
+        form = TutorForm(instance=tutor)
+
+    context = {
+        'perfil':    perfil,
+        'tutor':     tutor,
+        'form':      form,
+        'pacientes': tutor.pacientes.all(),
+    }
+    return render(request, 'clinica/tutor_editar.html', context)
 
 
 @login_required

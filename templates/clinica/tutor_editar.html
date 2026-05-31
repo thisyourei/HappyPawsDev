@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HappyPaws — Editar tutor · {{ tutor.nombre }}</title>
+  <script>(function(){var t=localStorage.getItem('hp-tema');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+  <style>
+    body { align-items: flex-start; padding: 20px; }
+    .editar-wrap { width: 100%; max-width: 860px; margin: 0 auto; }
+    .editar-topbar {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .editar-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 16px;
+    }
+    .editar-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent-light); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: #185FA5; flex-shrink: 0;
+    }
+    .seccion-titulo {
+      font-size: 10px; font-weight: 700; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding-bottom: 8px; margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="editar-wrap">
+
+  <!-- ── Topbar ── -->
+  <div class="editar-topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="{% url 'index' %}?pantalla=tutores" class="btn-secundario" style="display:flex;align-items:center;gap:5px;text-decoration:none;font-size:12px">
+        <i class="ti ti-arrow-left"></i> Volver
+      </a>
+      <div style="display:flex;align-items:center;gap:7px">
+        <i class="ti ti-paw" style="font-size:17px;color:#185FA5"></i>
+        <span style="font-size:14px;font-weight:600;color:#111827">HappyPaws</span>
+      </div>
+      <span style="color:#d1d5db">·</span>
+      <span style="font-size:12px;color:#6b7280">Editar tutor</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="toggleTema()" class="btn-secundario" style="display:flex;align-items:center;gap:5px;font-size:12px" title="Cambiar tema">
+        <i id="tema-icono" class="ti ti-moon"></i>
+      </button>
+      <a href="{% url 'logout' %}" style="color:#9ca3af;font-size:17px;text-decoration:none" title="Cerrar sesión"><i class="ti ti-logout"></i></a>
+    </div>
+  </div>
+
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alerta-exito"><i class="ti ti-check"></i> {{ message }}</div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ── Header ── -->
+  <div class="editar-header">
+    <div class="editar-avatar">{{ tutor.nombre|slice:":2"|upper }}</div>
+    <div>
+      <div style="font-size:18px;font-weight:700;color:#111827">{{ tutor.nombre }}</div>
+      <div style="font-size:12px;color:#6b7280">
+        {{ pacientes|length }} mascota{{ pacientes|length|pluralize:"s" }} a cargo
+        {% if tutor.ciudad %} · {{ tutor.ciudad }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start">
+
+    <!-- Columna izquierda: formulario -->
+    <form method="post" action="{% url 'tutor_editar' tutor.pk %}">
+      {% csrf_token %}
+
+      {% if form.errors %}
+      <div class="alerta-exito" style="background:#FCEBEB;border-color:#F1ADAD;color:#A32D2D">
+        <i class="ti ti-alert-triangle"></i> Revisa los campos marcados, hay errores en el formulario.
+      </div>
+      {% endif %}
+
+      <div class="tarjeta" style="margin-bottom:12px">
+        <div class="seccion-titulo"><i class="ti ti-user"></i> Datos del tutor</div>
+        <div class="grilla-form">
+          <div class="campo"><label>Nombre completo</label><input type="text" name="nombre" value="{{ tutor.nombre }}" required></div>
+          <div class="campo"><label>RUT / DNI</label><input type="text" name="rut" value="{{ tutor.rut }}"></div>
+          <div class="campo"><label>Teléfono</label><input type="tel" name="telefono" value="{{ tutor.telefono }}"></div>
+          <div class="campo"><label>Correo electrónico</label><input type="email" name="email" value="{{ tutor.email }}"></div>
+          <div class="campo campo-completo"><label>Dirección</label><input type="text" name="direccion" value="{{ tutor.direccion }}"></div>
+          <div class="campo"><label>Ciudad</label><input type="text" name="ciudad" value="{{ tutor.ciudad }}"></div>
+          <div class="campo"><label>Contacto de emergencia</label><input type="tel" name="contacto_emergencia" value="{{ tutor.contacto_emergencia }}"></div>
+          <div class="campo campo-completo"><label>Observaciones</label><textarea name="observaciones" rows="3" placeholder="Notas sobre el tutor...">{{ tutor.observaciones }}</textarea></div>
+        </div>
+      </div>
+
+      <div class="acciones-form">
+        <a href="{% url 'index' %}?pantalla=tutores" class="btn-secundario" style="text-decoration:none">Cancelar</a>
+        <button type="submit" class="btn-principal"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+      </div>
+    </form>
+
+    <!-- Columna derecha: mascotas del tutor -->
+    <div>
+      <div class="tarjeta">
+        <div class="seccion-titulo"><i class="ti ti-paw"></i> Mascotas a cargo</div>
+        {% for p in pacientes %}
+        <a href="{% url 'paciente_editar' p.pk %}" style="text-decoration:none;display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0">
+          <span style="font-size:18px">{% if p.especie == 'canino' %}🐕{% elif p.especie == 'felino' %}🐈{% elif p.especie == 'ave' %}🦜{% elif p.especie == 'reptil' %}🐢{% elif p.especie == 'roedor' %}🐇{% else %}🐾{% endif %}</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#111827">{{ p.nombre }}</div>
+            <div style="font-size:11px;color:#6b7280">{{ p.get_especie_display }}{% if p.raza %} · {{ p.raza }}{% endif %}</div>
+          </div>
+        </a>
+        {% empty %}
+        <div style="color:#9ca3af;font-size:12px;text-align:center;padding:14px">
+          Sin mascotas registradas.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

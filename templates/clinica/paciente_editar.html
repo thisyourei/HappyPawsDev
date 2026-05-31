@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HappyPaws — Editar paciente · {{ paciente.nombre }}</title>
+  <script>(function(){var t=localStorage.getItem('hp-tema');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+  <style>
+    body { align-items: flex-start; padding: 20px; }
+    .editar-wrap { width: 100%; max-width: 860px; margin: 0 auto; }
+    .editar-topbar {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .editar-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 16px;
+    }
+    .editar-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent-light); display: flex;
+      align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0;
+    }
+    .seccion-titulo {
+      font-size: 10px; font-weight: 700; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding-bottom: 8px; margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .item-hist {
+      border-left: 3px solid var(--border); padding: 8px 12px;
+      margin-bottom: 8px; border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      background: var(--bg-secondary);
+    }
+    .item-hist:hover { border-left-color: var(--accent); background: var(--accent-light); }
+  </style>
+</head>
+<body>
+
+<div class="editar-wrap">
+
+  <!-- ── Topbar ── -->
+  <div class="editar-topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="{% url 'index' %}?pantalla=pacientes" class="btn-secundario" style="display:flex;align-items:center;gap:5px;text-decoration:none;font-size:12px">
+        <i class="ti ti-arrow-left"></i> Volver
+      </a>
+      <div style="display:flex;align-items:center;gap:7px">
+        <i class="ti ti-paw" style="font-size:17px;color:#185FA5"></i>
+        <span style="font-size:14px;font-weight:600;color:#111827">HappyPaws</span>
+      </div>
+      <span style="color:#d1d5db">·</span>
+      <span style="font-size:12px;color:#6b7280">Editar paciente</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="toggleTema()" class="btn-secundario" style="display:flex;align-items:center;gap:5px;font-size:12px" title="Cambiar tema">
+        <i id="tema-icono" class="ti ti-moon"></i>
+      </button>
+      <a href="{% url 'logout' %}" style="color:#9ca3af;font-size:17px;text-decoration:none" title="Cerrar sesión"><i class="ti ti-logout"></i></a>
+    </div>
+  </div>
+
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alerta-exito"><i class="ti ti-check"></i> {{ message }}</div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ── Header ── -->
+  <div class="editar-header">
+    <div class="editar-avatar">
+      {% with e=paciente.especie %}{% if e == 'canino' %}🐕{% elif e == 'felino' %}🐈{% elif e == 'ave' %}🦜{% elif e == 'reptil' %}🐢{% elif e == 'roedor' %}🐇{% else %}🐾{% endif %}{% endwith %}
+    </div>
+    <div>
+      <div style="font-size:18px;font-weight:700;color:#111827">{{ paciente.nombre }}</div>
+      <div style="font-size:12px;color:#6b7280">{{ paciente.get_especie_display }}{% if paciente.raza %} · {{ paciente.raza }}{% endif %} · Tutor: {{ paciente.tutor.nombre }}</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start">
+
+    <!-- Columna izquierda: formulario -->
+    <form method="post" action="{% url 'paciente_editar' paciente.pk %}">
+      {% csrf_token %}
+
+      {% if form.errors %}
+      <div class="alerta-exito" style="background:#FCEBEB;border-color:#F1ADAD;color:#A32D2D">
+        <i class="ti ti-alert-triangle"></i> Revisa los campos marcados, hay errores en el formulario.
+      </div>
+      {% endif %}
+
+      <!-- Datos del paciente -->
+      <div class="tarjeta" style="margin-bottom:12px">
+        <div class="seccion-titulo"><i class="ti ti-paw"></i> Datos del paciente</div>
+        <div class="grilla-form">
+          <div class="campo"><label>Nombre</label><input type="text" name="nombre" value="{{ paciente.nombre }}" required></div>
+          <div class="campo"><label>Especie</label>
+            <select name="especie">
+              {% for val, etiqueta in form.fields.especie.choices %}
+              <option value="{{ val }}" {% if val == paciente.especie %}selected{% endif %}>{{ etiqueta }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="campo"><label>Raza</label><input type="text" name="raza" value="{{ paciente.raza }}"></div>
+          <div class="campo"><label>Sexo</label>
+            <select name="sexo">
+              <option value="M" {% if paciente.sexo == 'M' %}selected{% endif %}>Macho</option>
+              <option value="F" {% if paciente.sexo == 'F' %}selected{% endif %}>Hembra</option>
+            </select>
+          </div>
+          <div class="campo"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento" value="{{ paciente.fecha_nacimiento|date:'Y-m-d' }}"></div>
+          <div class="campo"><label>Peso (kg)</label><input type="number" name="peso" value="{{ paciente.peso|default:'' }}" step="0.01" min="0"></div>
+          <div class="campo"><label>Color / pelaje</label><input type="text" name="color" value="{{ paciente.color }}"></div>
+          <div class="campo"><label>N.º de microchip</label><input type="text" name="microchip" value="{{ paciente.microchip }}"></div>
+          <div class="campo"><label>Estado</label>
+            <select name="estado">
+              {% for val, etiqueta in form.fields.estado.choices %}
+              <option value="{{ val }}" {% if val == paciente.estado %}selected{% endif %}>{{ etiqueta }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="campo">
+            <label>Tutor responsable</label>
+            <select name="tutor" required>
+              {% for t in tutores %}<option value="{{ t.pk }}" {% if t.pk == paciente.tutor.pk %}selected{% endif %}>{{ t.nombre }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="campo campo-completo"><label>Alergias conocidas</label><input type="text" name="alergias" value="{{ paciente.alergias }}" placeholder="Ej: penicilina (separar con coma)"></div>
+          <div class="campo campo-completo"><label>Observaciones</label><textarea name="observaciones" rows="3" placeholder="Notas adicionales...">{{ paciente.observaciones }}</textarea></div>
+        </div>
+      </div>
+
+      <div class="acciones-form">
+        <a href="{% url 'index' %}?pantalla=pacientes" class="btn-secundario" style="text-decoration:none">Cancelar</a>
+        <button type="submit" class="btn-principal"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+      </div>
+    </form>
+
+    <!-- Columna derecha: historial de consultas -->
+    <div>
+      <div class="tarjeta">
+        <div class="seccion-titulo"><i class="ti ti-clock-history"></i> Consultas del paciente</div>
+        {% for c in consultas %}
+        <a href="{% url 'consulta_detalle' c.pk %}" style="text-decoration:none;display:block">
+          <div class="item-hist">
+            <div style="font-size:11px;color:#6b7280">{{ c.fecha|date:"d M Y" }} · {{ c.veterinario.nombre }}</div>
+            <div style="font-size:13px;font-weight:600;color:#111827">{{ c.motivo }}</div>
+          </div>
+        </a>
+        {% empty %}
+        <div style="color:#9ca3af;font-size:12px;text-align:center;padding:14px">
+          Sin consultas registradas.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
