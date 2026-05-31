@@ -283,7 +283,7 @@
             </thead>
             <tbody>
               {% for paciente in pacientes %}
-              <tr class="clickable" onclick="mostrarPantalla('perfil',null)">
+              <tr class="clickable"{% if perfil.puede_registrar %} onclick="window.location.href='{% url 'paciente_editar' paciente.pk %}'"{% endif %}>
                 <td>
                   <div class="en-linea">
                     <span style="font-size:20px">{% if paciente.especie == 'canino' %}🐕{% elif paciente.especie == 'felino' %}🐈{% elif paciente.especie == 'ave' %}🦜{% elif paciente.especie == 'reptil' %}🐢{% elif paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}</span>
@@ -300,7 +300,7 @@
                 <td>{{ paciente.tutor.nombre }}</td>
                 <td>{% if paciente.ultima_visita %}{{ paciente.ultima_visita|timesince }}{% else %}Sin visitas{% endif %}</td>
                 <td><span class="etiq etiq-{% if paciente.estado == 'activo' %}verde{% elif paciente.estado == 'seguimiento' %}ambar{% elif paciente.estado == 'urgente' %}rojo{% else %}gris{% endif %}">{{ paciente.get_estado_display }}</span></td>
-                <td><i class="ti ti-chevron-right" style="font-size:14px;color:#9ca3af"></i></td>
+                <td>{% if perfil.puede_registrar %}<a href="{% url 'paciente_editar' paciente.pk %}" class="btn-accion btn-accion-gris" onclick="event.stopPropagation()"><i class="ti ti-edit"></i> Editar</a>{% else %}<i class="ti ti-chevron-right" style="font-size:14px;color:#9ca3af"></i>{% endif %}</td>
               </tr>
               {% empty %}
               <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:30px">No hay pacientes registrados aún.</td></tr>
@@ -334,7 +334,7 @@
             </thead>
             <tbody>
               {% for tutor in tutores %}
-              <tr class="clickable">
+              <tr class="clickable"{% if perfil.puede_registrar %} onclick="window.location.href='{% url 'tutor_editar' tutor.pk %}'"{% endif %}>
                 <td>
                   <div class="en-linea">
                     <div class="avatar-tutor" style="width:32px;height:32px;font-size:11px">{{ tutor.nombre|slice:":2"|upper }}</div>
@@ -349,7 +349,7 @@
                   {% empty %}<span style="color:#9ca3af;font-size:12px">Sin mascotas</span>{% endfor %}
                 </td>
                 <td>{% if tutor.ultima_visita %}{{ tutor.ultima_visita|timesince }}{% else %}Sin visitas{% endif %}</td>
-                <td><i class="ti ti-chevron-right" style="font-size:14px;color:#9ca3af"></i></td>
+                <td>{% if perfil.puede_registrar %}<a href="{% url 'tutor_editar' tutor.pk %}" class="btn-accion btn-accion-gris" onclick="event.stopPropagation()"><i class="ti ti-edit"></i> Editar</a>{% else %}<i class="ti ti-chevron-right" style="font-size:14px;color:#9ca3af"></i>{% endif %}</td>
               </tr>
               {% empty %}
               <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:30px">No hay tutores registrados aún.</td></tr>

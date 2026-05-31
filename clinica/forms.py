@@ -8,12 +8,25 @@ class TutorForm(forms.ModelForm):
     class Meta:
         model = Tutor
         fields = ['nombre', 'rut', 'telefono', 'email', 'direccion', 'ciudad', 'contacto_emergencia', 'observaciones']
+        widgets = {
+            'observaciones': forms.Textarea(attrs={'rows': 3}),
+        }
 
 
 class PacienteForm(forms.ModelForm):
     class Meta:
         model = Paciente
         fields = ['nombre', 'especie', 'raza', 'sexo', 'fecha_nacimiento', 'peso', 'color', 'microchip', 'alergias', 'observaciones', 'tutor']
+        widgets = {
+            'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'}),
+            'observaciones': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class PacienteEditForm(PacienteForm):
+    """Edición de paciente: añade el campo estado al formulario base."""
+    class Meta(PacienteForm.Meta):
+        fields = ['nombre', 'especie', 'raza', 'sexo', 'fecha_nacimiento', 'peso', 'color', 'microchip', 'alergias', 'observaciones', 'estado', 'tutor']
 
 
 class ConsultaForm(forms.ModelForm):
@@ -27,11 +40,15 @@ class ConsultaForm(forms.ModelForm):
 
 
 class ConsultaEditForm(forms.ModelForm):
-    """Formulario completo para editar una consulta existente."""
+    """Formulario completo para editar una consulta existente.
+
+    El campo `estado` se gestiona aparte con los botones de acción rápida
+    (vista `consulta_estado`), por lo que no se incluye aquí: si estuviera,
+    el formulario exigiría el dato y la edición fallaría en silencio."""
     class Meta:
         model = Consulta
         fields = [
-            'veterinario', 'fecha', 'hora', 'motivo', 'estado',
+            'veterinario', 'fecha', 'hora', 'motivo',
             'peso_visita', 'temperatura', 'diagnostico', 'tratamiento',
             'requiere_seguimiento', 'fecha_proxima_visita', 'indicaciones_tutor',
         ]
