@@ -35,13 +35,15 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
+          # Usamos '##' como separador de pares para permitir comas dentro de los valores
           ENV_VARS="DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}"
-          ENV_VARS="${ENV_VARS},DB_NAME=${{ secrets.DB_NAME }}"
-          ENV_VARS="${ENV_VARS},DB_USER=${{ secrets.DB_USER }}"
-          ENV_VARS="${ENV_VARS},DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
-          ENV_VARS="${ENV_VARS},CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}"
-          ENV_VARS="${ENV_VARS},DJANGO_ALLOWED_HOSTS=.run.app"
-          ENV_VARS="${ENV_VARS},DEBUG=False"
+          ENV_VARS="${ENV_VARS}##DB_NAME=${{ secrets.DB_NAME }}"
+          ENV_VARS="${ENV_VARS}##DB_USER=${{ secrets.DB_USER }}"
+          ENV_VARS="${ENV_VARS}##DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+          ENV_VARS="${ENV_VARS}##CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}"
+          ENV_VARS="${ENV_VARS}##DJANGO_ALLOWED_HOSTS=.run.app,patitasfelicesspa.cl,www.patitasfelicesspa.cl"
+          ENV_VARS="${ENV_VARS}##CSRF_TRUSTED_ORIGINS=https://patitasfelicesspa.cl,https://www.patitasfelicesspa.cl"
+          ENV_VARS="${ENV_VARS}##DEBUG=False"
           gcloud run deploy happypaws-app \
             --image southamerica-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/happypaws/happypaws-app:${{ github.sha }} \
             --region ${{ secrets.GCP_REGION }} \
@@ -49,7 +51,7 @@ jobs:
             --allow-unauthenticated \
             --service-account yiokai-as@happypawschl.iam.gserviceaccount.com \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
-            --set-env-vars "${ENV_VARS}" \
+            --set-env-vars "^##^${ENV_VARS}" \
             --quiet
 
       - name: Run database migrations
