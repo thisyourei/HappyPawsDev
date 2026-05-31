@@ -1,4 +1,13 @@
 /* ══════════════════════════════════════════════════
+   SIDEBAR TOGGLE
+══════════════════════════════════════════════════ */
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('colapsado');
+  localStorage.setItem('hp-sidebar', sidebar.classList.contains('colapsado') ? '0' : '1');
+}
+
+/* ══════════════════════════════════════════════════
    TEMA — día / noche
 ══════════════════════════════════════════════════ */
 function _actualizarIconoTema(isDark) {
@@ -70,6 +79,17 @@ function mostrarTabConsulta(id, el) {
    INIT
 ══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
+  // Restaurar estado del sidebar
+  const sidebarAbierto = localStorage.getItem('hp-sidebar');
+  if (sidebarAbierto === '0') {
+    document.getElementById('sidebar')?.classList.add('colapsado');
+  }
+
+  // En móvil, colapsar por defecto si no hay preferencia guardada
+  if (sidebarAbierto === null && window.innerWidth <= 640) {
+    document.getElementById('sidebar')?.classList.add('colapsado');
+  }
+
   // Sincronizar icono con el tema ya aplicado (anti-flash lo aplicó antes)
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   _actualizarIconoTema(isDark);

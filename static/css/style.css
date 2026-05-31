@@ -161,6 +161,56 @@ body {
 [data-theme="dark"] .tema-switch             { background: var(--accent); }
 [data-theme="dark"] .tema-switch::after      { transform: translateX(16px); }
 
+/* ── Sidebar colapsable ── */
+.sidebar {
+  transition: width 0.25s ease, padding 0.25s ease;
+}
+.sidebar.colapsado {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+  border-right: none;
+}
+
+/* ── Botón toggle sidebar ── */
+.btn-sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 17px;
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s;
+}
+.btn-sidebar-toggle:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+/* ── En móvil: sidebar flota sobre el contenido ── */
+@media (max-width: 640px) {
+  .app {
+    max-width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+  .sidebar {
+    position: absolute;
+    z-index: 100;
+    height: 100%;
+    box-shadow: 4px 0 20px var(--shadow);
+  }
+  .sidebar.colapsado {
+    width: 0;
+    box-shadow: none;
+  }
+  .topbar-buscador { display: none; }
+}
+
 /* ══════════════════════════════════════════════════════
    MAIN / TOPBAR
 ══════════════════════════════════════════════════════ */

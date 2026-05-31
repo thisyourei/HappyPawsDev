@@ -16,7 +16,7 @@
 <div class="app">
 
   <!-- ── SIDEBAR ─────────────────────────────────────────── -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="logo">
       <div class="logo-marca">
         <i class="ti ti-paw" style="font-size:22px;color:#185FA5"></i>
@@ -69,10 +69,15 @@
 
     <!-- Topbar -->
     <div class="topbar">
-      <span class="topbar-titulo" id="topbar-titulo">Inicio</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn-sidebar-toggle" id="btn-sidebar-toggle" onclick="toggleSidebar()" title="Mostrar/ocultar menú">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <span class="topbar-titulo" id="topbar-titulo">Inicio</span>
+      </div>
       <div style="display:flex;gap:10px;align-items:center">
 
-        <div class="buscador">
+        <div class="buscador topbar-buscador">
           <i class="ti ti-search" style="font-size:13px"></i>
           Buscar paciente o tutor...
         </div>
