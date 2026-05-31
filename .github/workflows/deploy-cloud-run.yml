@@ -25,13 +25,13 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Configure Docker authentication
-        run: gcloud auth configure-docker gcr.io
+        run: gcloud auth configure-docker southamerica-west1-docker.pkg.dev
 
       - name: Build Docker image
-        run: docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/happypaws-app:${{ github.sha }} .
+        run: docker build -t southamerica-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/happypaws/happypaws-app:${{ github.sha }} .
 
       - name: Push Docker image
-        run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/happypaws-app:${{ github.sha }}
+        run: docker push southamerica-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/happypaws/happypaws-app:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         run: |
@@ -43,7 +43,7 @@ jobs:
           ENV_VARS="${ENV_VARS},DJANGO_ALLOWED_HOSTS=.run.app"
           ENV_VARS="${ENV_VARS},DEBUG=False"
           gcloud run deploy happypaws-app \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/happypaws-app:${{ github.sha }} \
+            --image southamerica-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/happypaws/happypaws-app:${{ github.sha }} \
             --region ${{ secrets.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
@@ -61,7 +61,7 @@ jobs:
           ENV_VARS="${ENV_VARS},CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}"
           ENV_VARS="${ENV_VARS},DEBUG=False"
           gcloud run jobs deploy happypaws-migrate \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/happypaws-app:${{ github.sha }} \
+            --image southamerica-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/happypaws/happypaws-app:${{ github.sha }} \
             --region ${{ secrets.GCP_REGION }} \
             --service-account yiokai-as@happypawschl.iam.gserviceaccount.com \
             --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
