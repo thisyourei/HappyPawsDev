@@ -383,6 +383,26 @@ body {
   color: var(--text-secondary);
   min-width: 200px;
 }
+.buscador:focus-within { border-color: var(--accent); }
+.buscador-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.buscador-input::placeholder { color: var(--text-secondary); }
+.buscador-limpiar {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: none;
+}
+.buscador-limpiar:hover { color: var(--text-primary); }
+.buscador.con-texto .buscador-limpiar { display: inline-block; }
 
 .btn-principal {
   background: var(--accent);

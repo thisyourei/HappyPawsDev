@@ -93,7 +93,10 @@
 
         <div class="buscador topbar-buscador">
           <i class="ti ti-search" style="font-size:13px"></i>
-          Buscar paciente o tutor...
+          <input type="text" id="buscador-input" class="buscador-input"
+                 placeholder="Buscar paciente o tutor..." autocomplete="off"
+                 oninput="buscarEnTabla(this.value)">
+          <i class="ti ti-x buscador-limpiar" id="buscador-limpiar" onclick="limpiarBusqueda()" title="Limpiar"></i>
         </div>
 
         <button class="btn-principal" onclick="mostrarPantalla('nuevo', document.querySelector('[data-pantalla=nuevo]'))">
