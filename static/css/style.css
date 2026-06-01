@@ -383,6 +383,7 @@ body {
   color: var(--text-secondary);
   min-width: 200px;
 }
+.buscador { position: relative; }
 .buscador:focus-within { border-color: var(--accent); }
 .buscador-input {
   flex: 1;
@@ -403,6 +404,58 @@ body {
 }
 .buscador-limpiar:hover { color: var(--text-primary); }
 .buscador.con-texto .buscador-limpiar { display: inline-block; }
+
+/* Dropdown de resultados (typeahead) */
+.buscador-resultados {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 30px var(--shadow);
+  overflow: hidden;
+  z-index: 200;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.buscador-resultados.activo { display: block; }
+.buscador-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.buscador-item:last-child { border-bottom: none; }
+.buscador-item:hover,
+.buscador-item.seleccionado { background: var(--accent-light); }
+.buscador-item-icono {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--bg-secondary); font-size: 16px; flex-shrink: 0;
+}
+.buscador-item-texto { flex: 1; min-width: 0; }
+.buscador-item-nombre {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.buscador-item-nombre mark { background: transparent; color: var(--accent); font-weight: 700; }
+.buscador-item-sub {
+  font-size: 11px; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.buscador-item-tipo {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-tertiary); flex-shrink: 0;
+}
+.buscador-vacio {
+  padding: 16px 12px; text-align: center;
+  font-size: 12px; color: var(--text-tertiary);
+}
 
 .btn-principal {
   background: var(--accent);

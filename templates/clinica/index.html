@@ -95,8 +95,10 @@
           <i class="ti ti-search" style="font-size:13px"></i>
           <input type="text" id="buscador-input" class="buscador-input"
                  placeholder="Buscar paciente o tutor..." autocomplete="off"
-                 oninput="buscarEnTabla(this.value)">
+                 oninput="buscarTypeahead(this.value)"
+                 onkeydown="buscadorTeclado(event)">
           <i class="ti ti-x buscador-limpiar" id="buscador-limpiar" onclick="limpiarBusqueda()" title="Limpiar"></i>
+          <div class="buscador-resultados" id="buscador-resultados"></div>
         </div>
 
         <button class="btn-principal" onclick="mostrarPantalla('nuevo', document.querySelector('[data-pantalla=nuevo]'))">
@@ -291,7 +293,12 @@
             </thead>
             <tbody>
               {% for paciente in pacientes %}
-              <tr class="clickable"{% if perfil.puede_registrar %} onclick="window.location.href='{% url 'paciente_editar' paciente.pk %}'"{% endif %}>
+              <tr class="clickable buscable"
+                  data-tipo="Paciente"
+                  data-nombre="{{ paciente.nombre }}"
+                  data-sub="{{ paciente.get_especie_display }}{% if paciente.tutor %} · {{ paciente.tutor.nombre }}{% endif %}"
+                  data-buscar="{{ paciente.nombre }} {{ paciente.get_especie_display }} {{ paciente.raza }} {{ paciente.tutor.nombre }}"
+                  {% if perfil.puede_registrar %}data-url="{% url 'paciente_editar' paciente.pk %}" onclick="window.location.href='{% url 'paciente_editar' paciente.pk %}'"{% endif %}>
                 <td>
                   <div class="en-linea">
                     <span style="font-size:20px">{% if paciente.especie == 'canino' %}🐕{% elif paciente.especie == 'felino' %}🐈{% elif paciente.especie == 'ave' %}🦜{% elif paciente.especie == 'reptil' %}🐢{% elif paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}</span>
@@ -342,7 +349,12 @@
             </thead>
             <tbody>
               {% for tutor in tutores %}
-              <tr class="clickable"{% if perfil.puede_registrar %} onclick="window.location.href='{% url 'tutor_editar' tutor.pk %}'"{% endif %}>
+              <tr class="clickable buscable"
+                  data-tipo="Tutor"
+                  data-nombre="{{ tutor.nombre }}"
+                  data-sub="{{ tutor.telefono|default:'' }}{% if tutor.email %} · {{ tutor.email }}{% endif %}"
+                  data-buscar="{{ tutor.nombre }} {{ tutor.telefono }} {{ tutor.email }}"
+                  {% if perfil.puede_registrar %}data-url="{% url 'tutor_editar' tutor.pk %}" onclick="window.location.href='{% url 'tutor_editar' tutor.pk %}'"{% endif %}>
                 <td>
                   <div class="en-linea">
                     <div class="avatar-tutor" style="width:32px;height:32px;font-size:11px">{{ tutor.nombre|slice:":2"|upper }}</div>

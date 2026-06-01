@@ -116,15 +116,8 @@ const titulos = {
 };
 
 function mostrarPantalla(id, el) {
-  // Reiniciar la búsqueda al cambiar de pantalla (evita filas ocultas heredadas)
-  const inputBusqueda = document.getElementById('buscador-input');
-  if (inputBusqueda && inputBusqueda.value) {
-    inputBusqueda.value = '';
-    const wrap = document.querySelector('.buscador');
-    if (wrap) wrap.classList.remove('con-texto');
-    document.querySelectorAll('table.tabla tbody tr').forEach(tr => { tr.style.display = ''; });
-    document.querySelectorAll('.buscador-sin-resultados').forEach(a => { a.style.display = 'none'; });
-  }
+  // Cerrar el dropdown del buscador al cambiar de pantalla
+  if (typeof cerrarDropdownBusqueda === 'function') cerrarDropdownBusqueda();
 
   document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
   const pantalla = document.getElementById('pantalla-' + id);
@@ -151,64 +144,142 @@ function mostrarPantalla(id, el) {
 
 
 /* ══════════════════════════════════════════════════
-   BUSCADOR — filtra filas de la pantalla activa
+   BUSCADOR — autocompletado (typeahead, máx. 5)
 ══════════════════════════════════════════════════ */
-function buscarEnTabla(termino) {
+const MAX_RESULTADOS = 5;
+let _indiceBusqueda = null;   // se construye una vez
+let _seleccionado = -1;       // índice resaltado en el dropdown
+
+function _construirIndice() {
+  if (_indiceBusqueda) return _indiceBusqueda;
+  _indiceBusqueda = Array.from(document.querySelectorAll('tr.buscable')).map(tr => ({
+    nombre: tr.dataset.nombre || '',
+    tipo:   tr.dataset.tipo || '',
+    sub:    tr.dataset.sub || '',
+    url:    tr.dataset.url || '',
+    buscar: (tr.dataset.buscar || '').toLowerCase(),
+  })).filter(x => x.nombre);
+  return _indiceBusqueda;
+}
+
+function _escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
+function _resaltar(nombre, q) {
+  const i = nombre.toLowerCase().indexOf(q);
+  if (i < 0 || !q) return _escapeHtml(nombre);
+  return _escapeHtml(nombre.slice(0, i)) +
+         '<mark>' + _escapeHtml(nombre.slice(i, i + q.length)) + '</mark>' +
+         _escapeHtml(nombre.slice(i + q.length));
+}
+
+function buscarTypeahead(termino) {
   const q = (termino || '').trim().toLowerCase();
   const wrap = document.querySelector('.buscador');
+  const cont = document.getElementById('buscador-resultados');
   if (wrap) wrap.classList.toggle('con-texto', q.length > 0);
+  if (!cont) return;
 
-  // Si estamos en Inicio (sin tabla) y se empieza a buscar, ir a Pacientes
-  // (cambio manual para no reiniciar el término de búsqueda)
-  let activa = document.querySelector('.pantalla.activa');
-  if (q && activa && activa.id === 'pantalla-inicio') {
-    document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
-    const dest = document.getElementById('pantalla-pacientes');
-    if (dest) dest.classList.add('activa');
-    const nav = document.querySelector('[data-pantalla="pacientes"]');
-    if (nav) {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('activo'));
-      nav.classList.add('activo');
-    }
-    const titulo = document.getElementById('topbar-titulo');
-    if (titulo) titulo.textContent = 'Pacientes';
-    activa = dest;
+  _seleccionado = -1;
+  if (!q) { cont.classList.remove('activo'); cont.innerHTML = ''; return; }
+
+  // Ranking: empieza-con > nombre-incluye > texto-incluye
+  const idx = _construirIndice();
+  const resultados = idx
+    .map(item => {
+      const nom = item.nombre.toLowerCase();
+      let score = -1;
+      if (nom.startsWith(q)) score = 0;
+      else if (nom.includes(q)) score = 1;
+      else if (item.buscar.includes(q)) score = 2;
+      return { item, score };
+    })
+    .filter(r => r.score >= 0)
+    .sort((a, b) => a.score - b.score || a.item.nombre.localeCompare(b.item.nombre))
+    .slice(0, MAX_RESULTADOS);
+
+  if (resultados.length === 0) {
+    cont.innerHTML = '<div class="buscador-vacio"><i class="ti ti-search-off"></i> Sin resultados</div>';
+    cont.classList.add('activo');
+    return;
   }
-  if (!activa) return;
 
-  let visibles = 0, totales = 0;
-  activa.querySelectorAll('table.tabla tbody tr').forEach(tr => {
-    // Saltar filas especiales (separadores de día, mensajes "no hay...")
-    if (tr.querySelector('td[colspan]')) return;
-    totales++;
-    const coincide = !q || tr.textContent.toLowerCase().includes(q);
-    tr.style.display = coincide ? '' : 'none';
-    if (coincide) visibles++;
-  });
+  cont.innerHTML = resultados.map((r, n) => {
+    const it = r.item;
+    const icono = it.tipo === 'Tutor' ? '👤' : '🐾';
+    return `<div class="buscador-item" data-n="${n}" data-url="${_escapeHtml(it.url)}"
+              data-nombre="${_escapeHtml(it.nombre)}" data-tipo="${_escapeHtml(it.tipo)}"
+              onmousedown="seleccionarResultado(${n})">
+      <div class="buscador-item-icono">${icono}</div>
+      <div class="buscador-item-texto">
+        <div class="buscador-item-nombre">${_resaltar(it.nombre, q)}</div>
+        ${it.sub ? `<div class="buscador-item-sub">${_escapeHtml(it.sub)}</div>` : ''}
+      </div>
+      <span class="buscador-item-tipo">${_escapeHtml(it.tipo)}</span>
+    </div>`;
+  }).join('');
+  cont.classList.add('activo');
+}
 
-  // Mostrar/ocultar aviso de "sin resultados"
-  activa.querySelectorAll('table.tabla').forEach(tabla => {
-    let aviso = tabla.parentElement.querySelector('.buscador-sin-resultados');
-    if (q && totales > 0 && visibles === 0) {
-      if (!aviso) {
-        aviso = document.createElement('div');
-        aviso.className = 'buscador-sin-resultados';
-        aviso.style.cssText = 'text-align:center;color:var(--text-tertiary);padding:24px;font-size:13px';
-        aviso.innerHTML = '<i class="ti ti-search-off"></i> Sin resultados para "<strong></strong>"';
-        tabla.parentElement.appendChild(aviso);
-      }
-      aviso.querySelector('strong').textContent = termino;
-      aviso.style.display = 'block';
-    } else if (aviso) {
-      aviso.style.display = 'none';
-    }
-  });
+function _itemsDropdown() {
+  return Array.from(document.querySelectorAll('#buscador-resultados .buscador-item'));
+}
+
+function buscadorTeclado(e) {
+  const items = _itemsDropdown();
+  if (e.key === 'Escape') { cerrarDropdownBusqueda(); return; }
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _seleccionado = (_seleccionado + 1) % items.length;
+    _pintarSeleccion(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _seleccionado = (_seleccionado - 1 + items.length) % items.length;
+    _pintarSeleccion(items);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const n = _seleccionado >= 0 ? _seleccionado : 0;   // Enter abre el primero
+    seleccionarResultado(n);
+  }
+}
+
+function _pintarSeleccion(items) {
+  items.forEach((el, i) => el.classList.toggle('seleccionado', i === _seleccionado));
+  if (_seleccionado >= 0) items[_seleccionado].scrollIntoView({ block: 'nearest' });
+}
+
+function seleccionarResultado(n) {
+  const items = _itemsDropdown();
+  const el = items[n];
+  if (!el) return;
+  const url = el.dataset.url;
+  if (url) {
+    window.location.href = url;
+  } else {
+    // Sin permiso de edición: ir a la pantalla correspondiente y filtrar la tabla
+    const tipo = el.dataset.tipo;
+    const pantalla = tipo === 'Tutor' ? 'tutores' : 'pacientes';
+    const nav = document.querySelector(`[data-pantalla="${pantalla}"]`);
+    mostrarPantalla(pantalla, nav);
+    cerrarDropdownBusqueda();
+  }
+}
+
+function cerrarDropdownBusqueda() {
+  const cont = document.getElementById('buscador-resultados');
+  if (cont) { cont.classList.remove('activo'); }
+  _seleccionado = -1;
 }
 
 function limpiarBusqueda() {
   const input = document.getElementById('buscador-input');
   if (input) input.value = '';
-  buscarEnTabla('');
+  buscarTypeahead('');
   if (input) input.focus();
 }
 
@@ -259,6 +330,11 @@ document.addEventListener('DOMContentLoaded', () => {
     url.searchParams.delete('pantalla');
     window.history.replaceState({}, '', url);
   }
+
+  // Cerrar el dropdown del buscador al hacer clic fuera
+  document.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('.buscador')) cerrarDropdownBusqueda();
+  });
 
   // Auto-cerrar alertas de éxito
   document.querySelectorAll('.alerta-exito').forEach(el => {
