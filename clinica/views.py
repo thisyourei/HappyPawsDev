@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Max
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -67,6 +68,12 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+@login_required
+def keepalive(request):
+    # El middleware ya actualizó last_activity; solo confirmar que la sesión sigue viva.
+    return HttpResponse(status=204)
 
 
 # ── Vista principal ───────────────────────────────────────────────────────────

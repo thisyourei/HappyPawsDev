@@ -9,24 +9,31 @@
 
   let idleTimer = null;
   let countdownTimer = null;
+  let lastActivityAt = Date.now();  // timestamp de pared — no se pausa en pestañas ocultas
+  let warningShownAt = null;        // cuándo apareció el modal (null = no está visible)
 
   function logoutUrl() { return window.LOGOUT_URL || '/logout/'; }
   function modal() { return document.getElementById('modal-inactividad'); }
 
   function reiniciarInactividad() {
+    lastActivityAt = Date.now();
     clearTimeout(idleTimer);
     idleTimer = setTimeout(mostrarAdvertencia, IDLE_MS);
   }
 
   function mostrarAdvertencia() {
+    warningShownAt = Date.now();
     const m = modal();
     if (!m) return;
     m.classList.add('activo');
+    _iniciarContador(GRACIA_S);
+  }
 
-    let restante = GRACIA_S;
+  function _iniciarContador(segundosRestantes) {
+    clearInterval(countdownTimer);
+    let restante = segundosRestantes;
     const cont = document.getElementById('inactividad-contador');
     if (cont) cont.textContent = restante;
-
     countdownTimer = setInterval(() => {
       restante -= 1;
       if (cont) cont.textContent = restante;
@@ -34,8 +41,42 @@
     }, 1000);
   }
 
+  // Al volver a la pestaña, recalcular con tiempo de reloj real porque
+  // setInterval/setTimeout se congela en pestañas ocultas.
+  function sincronizarAlVolver() {
+    if (document.hidden) return;
+    const now = Date.now();
+
+    if (warningShownAt !== null) {
+      // El modal ya estaba visible — verificar si el período de gracia venció
+      const transcurrido = Math.floor((now - warningShownAt) / 1000);
+      if (transcurrido >= GRACIA_S) {
+        cerrarSesionAhora();
+      } else {
+        // Reanudar el contador con el tiempo real restante
+        _iniciarContador(GRACIA_S - transcurrido);
+      }
+    } else {
+      // No había modal — verificar si el timeout total ya pasó
+      const idleElapsed = now - lastActivityAt;
+      if (idleElapsed >= IDLE_MS + GRACIA_S * 1000) {
+        cerrarSesionAhora();
+      } else if (idleElapsed >= IDLE_MS) {
+        clearTimeout(idleTimer);
+        mostrarAdvertencia();
+      } else {
+        // Reprogramar el timer con el tiempo real restante
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(mostrarAdvertencia, IDLE_MS - idleElapsed);
+      }
+    }
+  }
+
   // Expuestas globalmente para los botones del modal
   window.seguirActivo = function () {
+    fetch(window.KEEPALIVE_URL || '/keepalive/', { credentials: 'same-origin' })
+      .then(r => { if (r.redirected) window.location.href = r.url; });
+    warningShownAt = null;
     const m = modal();
     if (m) m.classList.remove('activo');
     clearInterval(countdownTimer);
@@ -57,6 +98,8 @@
       reiniciarInactividad();
     }, { passive: true });
   });
+
+  document.addEventListener('visibilitychange', sincronizarAlVolver);
 
   document.addEventListener('DOMContentLoaded', reiniciarInactividad);
 })();

@@ -30,9 +30,13 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'clinica.middleware.InactivitySessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Cierre de sesión por inactividad: 5 minutos (debe coincidir con el JS del cliente)
+SESSION_INACTIVITY_TIMEOUT = 5 * 60  # segundos
 
 ROOT_URLCONF = 'happypaws.urls'
 

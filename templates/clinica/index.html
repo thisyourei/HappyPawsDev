@@ -812,7 +812,10 @@
 
 </div><!-- fin app -->
 
-<script>window.LOGOUT_URL = "{% url 'logout' %}";</script>
+<script>
+  window.LOGOUT_URL   = "{% url 'logout' %}";
+  window.KEEPALIVE_URL = "{% url 'keepalive' %}";
+</script>
 
 </body>
 </html>
