@@ -1,3 +1,4 @@
+import random
 from datetime import date, time, timedelta
 
 from django.contrib.auth.models import User
@@ -24,6 +25,12 @@ class Command(BaseCommand):
             action='store_true',
             help='Elimina todos los datos existentes antes de insertar',
         )
+        parser.add_argument(
+            '--factor',
+            type=int,
+            default=1,
+            help='Multiplicador de volumen de datos masivos (ej. 20)',
+        )
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -45,7 +52,17 @@ class Command(BaseCommand):
         self._crear_patologias(pacientes)
         self._crear_consultas(pacientes, vets)
 
+        factor = options.get('factor', 1)
+        if factor and factor > 1:
+            self._crear_masivos(factor, vets)
+
         self.stdout.write(self.style.SUCCESS('\n✔ Datos de prueba cargados exitosamente.'))
+        self.stdout.write(
+            f'  Totales — Tutores: {Tutor.objects.count()} · '
+            f'Pacientes: {Paciente.objects.count()} · '
+            f'Consultas: {Consulta.objects.count()} · '
+            f'Vacunas: {Vacuna.objects.count()}'
+        )
         self.stdout.write('  Usuario admin: admin / admin1234')
         self.stdout.write('  Usuario veterinario: dr.silva / vet1234')
         self.stdout.write('  Usuario recepcion: recepcion / recep1234')
@@ -519,3 +536,133 @@ class Command(BaseCommand):
                 motivo=datos['motivo'],
                 defaults=datos,
             )
+
+    # ------------------------------------------------------------------
+    def _crear_masivos(self, factor, vets):
+        """Genera volumen adicional de datos de prueba (determinista).
+
+        Crea ~5*factor tutores nuevos, cada uno con 1-3 mascotas, y para
+        cada mascota vacunas y 0-3 consultas. Con factor=20 ≈ 100 tutores,
+        ~200 pacientes y ~400 consultas, además de los datos curados.
+        """
+        self.stdout.write(f'Generando datos masivos (x{factor})...')
+        rnd = random.Random(20260601)  # semilla fija → idempotente
+
+        nombres = [
+            'Sofía', 'Mateo', 'Emma', 'Benjamín', 'Martina', 'Vicente', 'Florencia',
+            'Agustín', 'Antonia', 'Tomás', 'Josefa', 'Maximiliano', 'Catalina', 'Lucas',
+            'Emilia', 'Joaquín', 'Amanda', 'Gabriel', 'Trinidad', 'Diego', 'Javiera',
+            'Cristóbal', 'Constanza', 'Matías', 'Fernanda', 'Nicolás', 'Valeria', 'Ignacio',
+        ]
+        apellidos = [
+            'González', 'Muñoz', 'Rojas', 'Díaz', 'Pérez', 'Soto', 'Contreras', 'Silva',
+            'Martínez', 'Sepúlveda', 'Morales', 'Rodríguez', 'López', 'Fuentes', 'Hernández',
+            'Torres', 'Araya', 'Flores', 'Espinoza', 'Castillo', 'Tapia', 'Reyes', 'Gutiérrez',
+        ]
+        ciudades = [
+            'Santiago', 'Las Condes', 'Ñuñoa', 'Providencia', 'Maipú', 'La Florida',
+            'Puente Alto', 'Vitacura', 'San Miguel', 'Peñalolén', 'Macul', 'Recoleta',
+        ]
+        razas = {
+            'canino': ['Mestizo', 'Labrador', 'Golden Retriever', 'Poodle', 'Bulldog Francés',
+                       'Pastor Alemán', 'Beagle', 'Chihuahua', 'Cocker Spaniel', 'Husky'],
+            'felino': ['Mestizo', 'Siamés', 'Persa', 'Angora', 'Maine Coon', 'Bengalí'],
+            'ave': ['Canario', 'Periquito', 'Agapornis', 'Cacatúa'],
+            'roedor': ['Hámster', 'Cobayo', 'Conejo', 'Chinchilla'],
+            'reptil': ['Tortuga', 'Iguana', 'Gecko'],
+            'otro': ['Hurón', 'Erizo'],
+        }
+        nombres_mascota = [
+            'Toby', 'Rocky', 'Coco', 'Lola', 'Bella', 'Simba', 'Nina', 'Thor', 'Maya',
+            'Bruno', 'Kira', 'Zeus', 'Mia', 'Duke', 'Frida', 'Oso', 'Canela', 'Negro',
+            'Manchas', 'Pelusa', 'Gordo', 'Princesa', 'Chico', 'Luna', 'Sol', 'Estrella',
+        ]
+        especies = ['canino'] * 6 + ['felino'] * 4 + ['ave', 'roedor', 'reptil', 'otro']
+        estados = ['activo'] * 7 + ['seguimiento'] * 2 + ['urgente', 'inactivo']
+        motivos = [
+            'Control sano anual', 'Vacunación', 'Desparasitación', 'Consulta por vómitos',
+            'Cojera en pata trasera', 'Control de peso', 'Limpieza dental', 'Otitis',
+            'Dermatitis', 'Castración', 'Chequeo geriátrico', 'Herida superficial',
+            'Diarrea aguda', 'Control post-operatorio', 'Decaimiento general',
+        ]
+
+        hoy = date.today()
+        n_tutores = 5 * factor
+
+        for i in range(n_tutores):
+            nom = f'{rnd.choice(nombres)} {rnd.choice(apellidos)}'
+            rut = '2{:01d}.{:03d}.{:03d}-{}'.format(
+                i // 1000000 % 10, (i // 1000) % 1000, i % 1000, rnd.choice('0123456789K')
+            )
+            tutor, _ = Tutor.objects.get_or_create(
+                rut=rut,
+                defaults={
+                    'nombre': nom,
+                    'telefono': '+56 9 {:04d} {:04d}'.format(rnd.randint(2000, 9999), rnd.randint(1000, 9999)),
+                    'email': '{}@example.cl'.format(nom.lower().replace(' ', '.').replace('í', 'i').replace('é', 'e').replace('á', 'a').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')),
+                    'direccion': '{} {}'.format(rnd.choice(['Av.', 'Calle', 'Pasaje']), rnd.randint(100, 9999)),
+                    'ciudad': rnd.choice(ciudades),
+                },
+            )
+
+            for _m in range(rnd.randint(1, 3)):
+                especie = rnd.choice(especies)
+                sexo = rnd.choice(['M', 'F'])
+                edad_dias = rnd.randint(120, 365 * 14)
+                peso = {
+                    'canino': round(rnd.uniform(3, 45), 2),
+                    'felino': round(rnd.uniform(2.5, 7), 2),
+                    'ave': round(rnd.uniform(0.02, 0.5), 2),
+                    'roedor': round(rnd.uniform(0.05, 3), 2),
+                    'reptil': round(rnd.uniform(0.1, 5), 2),
+                    'otro': round(rnd.uniform(0.5, 4), 2),
+                }[especie]
+                pac, creado = Paciente.objects.get_or_create(
+                    nombre=rnd.choice(nombres_mascota),
+                    tutor=tutor,
+                    defaults={
+                        'especie': especie,
+                        'raza': rnd.choice(razas[especie]),
+                        'sexo': sexo,
+                        'fecha_nacimiento': hoy - timedelta(days=edad_dias),
+                        'peso': peso,
+                        'estado': rnd.choice(estados),
+                    },
+                )
+                if not creado:
+                    continue
+
+                # Vacunas
+                if especie == 'canino':
+                    for nombre, da, dp in [('Séxtuple', -300, 65), ('Antirrábica', -150, 215)]:
+                        Vacuna.objects.get_or_create(
+                            paciente=pac, nombre=nombre,
+                            defaults={'fecha_aplicacion': hoy + timedelta(days=da),
+                                      'proxima_dosis': hoy + timedelta(days=dp)},
+                        )
+                elif especie == 'felino':
+                    Vacuna.objects.get_or_create(
+                        paciente=pac, nombre='Triple Felina',
+                        defaults={'fecha_aplicacion': hoy - timedelta(days=200),
+                                  'proxima_dosis': hoy + timedelta(days=165)},
+                    )
+
+                # Consultas (0-3)
+                for _c in range(rnd.randint(0, 3)):
+                    offset = rnd.randint(-180, 30)
+                    estado = 'completada' if offset < 0 else rnd.choice(['pendiente', 'en_curso'])
+                    Consulta.objects.get_or_create(
+                        paciente=pac,
+                        fecha=hoy + timedelta(days=offset),
+                        hora=time(rnd.randint(9, 18), rnd.choice([0, 15, 30, 45])),
+                        motivo=rnd.choice(motivos),
+                        defaults={
+                            'veterinario': rnd.choice(vets),
+                            'peso_visita': peso,
+                            'temperatura': round(rnd.uniform(37.5, 39.5), 1),
+                            'estado': estado,
+                            'diagnostico': 'Evaluación clínica completada.' if estado == 'completada' else '',
+                            'tratamiento': 'Tratamiento indicado según hallazgos.' if estado == 'completada' else '',
+                            'requiere_seguimiento': rnd.choice(['no', 'no', 'programada']),
+                        },
+                    )
