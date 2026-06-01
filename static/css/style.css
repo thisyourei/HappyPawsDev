@@ -823,9 +823,9 @@ body {
   margin-top: 5px; display: flex; align-items: center; gap: 4px;
 }
 
-/* Layout 60/40 */
+/* Layout 3/5 – 2/5 */
 .inicio-layout {
-  display: grid; grid-template-columns: 1fr 230px;
+  display: grid; grid-template-columns: 3fr 2fr;
   gap: 12px; align-items: start;
 }
 
