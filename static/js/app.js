@@ -216,6 +216,16 @@ function _resaltar(nombre, q) {
          _escapeHtml(nombre.slice(i + q.length));
 }
 
+function _posicionarDropdown() {
+  const wrap = document.querySelector('.buscador');
+  const cont = document.getElementById('buscador-resultados');
+  if (!wrap || !cont) return;
+  const r = wrap.getBoundingClientRect();
+  cont.style.top = (r.bottom + 6) + 'px';
+  cont.style.left = r.left + 'px';
+  cont.style.width = r.width + 'px';
+}
+
 function buscarTypeahead(termino) {
   const q = (termino || '').trim().toLowerCase();
   const wrap = document.querySelector('.buscador');
@@ -225,6 +235,7 @@ function buscarTypeahead(termino) {
 
   _seleccionado = -1;
   if (!q) { cont.classList.remove('activo'); cont.innerHTML = ''; return; }
+  _posicionarDropdown();
 
   // Ranking: empieza-con > nombre-incluye > texto-incluye
   const idx = _construirIndice();
@@ -374,6 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cerrar el dropdown del buscador al hacer clic fuera
   document.addEventListener('mousedown', (e) => {
     if (!e.target.closest('.buscador')) cerrarDropdownBusqueda();
+  });
+  // Reposicionar el dropdown si cambia el tamaño de la ventana
+  window.addEventListener('resize', () => {
+    const cont = document.getElementById('buscador-resultados');
+    if (cont && cont.classList.contains('activo')) _posicionarDropdown();
   });
 
   // Auto-cerrar alertas de éxito
