@@ -154,6 +154,50 @@ body {
 [data-theme="dark"] .tema-switch             { background: var(--accent); }
 [data-theme="dark"] .tema-switch::after      { transform: translateX(16px); }
 
+/* ── Botón Cerrar sesión (sidebar) ── */
+.nav-logout {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #d14343;
+  text-decoration: none;
+  cursor: pointer;
+  border-top: 1px solid var(--border);
+  transition: background 0.12s, color 0.12s;
+}
+.nav-logout:hover { background: rgba(209,67,67,0.10); color: #b32d2d; }
+.nav-logout i { font-size: 17px; }
+
+/* ── Modal de inactividad ── */
+.modal-inactividad {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-inactividad.activo { display: flex; }
+.modal-inactividad-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 26px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 50px rgba(0,0,0,0.40);
+}
+.modal-inactividad-icono { font-size: 42px; color: var(--accent); }
+.modal-inactividad-card h3 { margin: 12px 0 8px; font-size: 18px; color: var(--text-primary); }
+.modal-inactividad-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 22px; line-height: 1.5; }
+.modal-inactividad-card p strong { color: var(--accent); }
+.modal-inactividad-acciones { display: flex; gap: 10px; justify-content: center; }
+
 /* ── Sidebar colapsable ── */
 .sidebar {
   transition: width 0.25s ease, padding 0.25s ease;

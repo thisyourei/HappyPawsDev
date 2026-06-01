@@ -1,4 +1,67 @@
 /* ══════════════════════════════════════════════════
+   AUTO-CIERRE DE SESIÓN POR INACTIVIDAD
+   4 min sin interacción → advertencia con 60s de gracia
+   (5 min en total) → cierre automático de sesión
+══════════════════════════════════════════════════ */
+(function () {
+  const IDLE_MS = 4 * 60 * 1000;   // 4 minutos hasta la advertencia
+  const GRACIA_S = 60;             // 60 segundos de gracia
+
+  let idleTimer = null;
+  let countdownTimer = null;
+
+  function logoutUrl() { return window.LOGOUT_URL || '/logout/'; }
+  function modal() { return document.getElementById('modal-inactividad'); }
+
+  function reiniciarInactividad() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(mostrarAdvertencia, IDLE_MS);
+  }
+
+  function mostrarAdvertencia() {
+    const m = modal();
+    if (!m) return;
+    m.classList.add('activo');
+
+    let restante = GRACIA_S;
+    const cont = document.getElementById('inactividad-contador');
+    if (cont) cont.textContent = restante;
+
+    countdownTimer = setInterval(() => {
+      restante -= 1;
+      if (cont) cont.textContent = restante;
+      if (restante <= 0) cerrarSesionAhora();
+    }, 1000);
+  }
+
+  // Expuestas globalmente para los botones del modal
+  window.seguirActivo = function () {
+    const m = modal();
+    if (m) m.classList.remove('activo');
+    clearInterval(countdownTimer);
+    reiniciarInactividad();
+  };
+
+  window.cerrarSesionAhora = function () {
+    clearInterval(countdownTimer);
+    clearTimeout(idleTimer);
+    window.location.href = logoutUrl();
+  };
+
+  // Cualquier interacción reinicia el contador — salvo durante la advertencia,
+  // donde el usuario debe confirmar manualmente que sigue presente.
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      const m = modal();
+      if (m && m.classList.contains('activo')) return;
+      reiniciarInactividad();
+    }, { passive: true });
+  });
+
+  document.addEventListener('DOMContentLoaded', reiniciarInactividad);
+})();
+
+/* ══════════════════════════════════════════════════
    SIDEBAR TOGGLE
 ══════════════════════════════════════════════════ */
 function toggleSidebar() {

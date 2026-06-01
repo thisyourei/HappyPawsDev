@@ -68,6 +68,11 @@
       </div>
       <div class="tema-switch"></div>
     </div>
+
+    <!-- Cerrar sesión -->
+    <a href="{% url 'logout' %}" class="nav-logout" title="Cerrar sesión">
+      <i class="ti ti-logout"></i> Cerrar sesión
+    </a>
   </div>
 
   <!-- ── MAIN ────────────────────────────────────────────── -->
@@ -739,7 +744,24 @@
     </footer>
 
   </div><!-- fin main -->
+
+  <!-- ── MODAL DE INACTIVIDAD ──────────────────────────────── -->
+  <div class="modal-inactividad" id="modal-inactividad">
+    <div class="modal-inactividad-card">
+      <i class="ti ti-alert-triangle modal-inactividad-icono"></i>
+      <h3>¿Sigues ahí?</h3>
+      <p>Por seguridad, tu sesión se cerrará por inactividad en
+        <strong id="inactividad-contador">60</strong> segundos.</p>
+      <div class="modal-inactividad-acciones">
+        <button class="btn-principal" onclick="seguirActivo()"><i class="ti ti-check"></i> Sigo aquí</button>
+        <button class="btn-secundario" onclick="cerrarSesionAhora()">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
 </div><!-- fin app -->
+
+<script>window.LOGOUT_URL = "{% url 'logout' %}";</script>
 
 </body>
 </html>
