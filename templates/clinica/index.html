@@ -236,7 +236,7 @@
                   {% if s.requiere_seguimiento == 'urgente' %}<span class="etiq etiq-rojo" style="font-size:8px;margin-left:3px">Urgente</span>{% endif %}
                 </div>
                 <div class="seg-detalle">
-                  {% if s.fecha_proxima_visita < hoy %}⚠ Vencido — {% elif s.fecha_proxima_visita == hoy %}Hoy — {% endif %}{{ s.fecha_proxima_visita|date:"d M" }}
+                  {% if s.fecha_proxima_visita < hoy %}⚠ Vencido — {% elif s.fecha_proxima_visita == hoy %}Hoy — {% endif %}{{ s.fecha_proxima_visita|date:"D d M"|capfirst }}
                 </div>
               </a>
               {% endfor %}
@@ -413,7 +413,7 @@
           <span>
             <strong>{{ s.paciente.nombre }}</strong>
             — Seguimiento {% if s.requiere_seguimiento == 'urgente' %}<strong>urgente</strong>{% else %}programado{% endif %}
-            para <strong>{{ s.fecha_proxima_visita|date:"d M Y" }}</strong>
+            para <strong>{{ s.fecha_proxima_visita|date:"l d M Y"|capfirst }}</strong>
             {% if s.fecha_proxima_visita < hoy %}<span style="color:inherit;font-weight:600"> · VENCIDO</span>{% endif %}
           </span>
           <a href="{% url 'consulta_detalle' s.pk %}" style="margin-left:auto;color:inherit;font-size:11px;text-decoration:underline;white-space:nowrap">Ver consulta</a>

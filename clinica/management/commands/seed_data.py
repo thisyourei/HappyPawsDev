@@ -31,6 +31,12 @@ class Command(BaseCommand):
             default=1,
             help='Multiplicador de volumen de datos masivos (ej. 20)',
         )
+        parser.add_argument(
+            '--consultas',
+            type=int,
+            default=0,
+            help='Total objetivo de consultas (rellena con fechas ene-2026 → hoy)',
+        )
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -55,6 +61,10 @@ class Command(BaseCommand):
         factor = options.get('factor', 1)
         if factor and factor > 1:
             self._crear_masivos(factor, vets)
+
+        objetivo_consultas = options.get('consultas', 0)
+        if objetivo_consultas and objetivo_consultas > 0:
+            self._crear_consultas_masivas(objetivo_consultas, vets)
 
         self.stdout.write(self.style.SUCCESS('\n✔ Datos de prueba cargados exitosamente.'))
         self.stdout.write(
@@ -666,3 +676,59 @@ class Command(BaseCommand):
                             'requiere_seguimiento': rnd.choice(['no', 'no', 'programada']),
                         },
                     )
+
+    # ------------------------------------------------------------------
+    def _crear_consultas_masivas(self, objetivo, vets):
+        """Rellena consultas hasta alcanzar 'objetivo', con fechas
+        distribuidas entre el 1 de enero de 2026 y hoy. Usa bulk_create
+        para eficiencia; idempotente respecto al total objetivo."""
+        pacientes = list(Paciente.objects.all())
+        if not pacientes or not vets:
+            return
+
+        actuales = Consulta.objects.count()
+        faltan = objetivo - actuales
+        if faltan <= 0:
+            self.stdout.write(f'Consultas ya en {actuales} (objetivo {objetivo}); nada que agregar.')
+            return
+
+        self.stdout.write(f'Generando {faltan} consultas (ene-2026 → hoy)...')
+        rnd = random.Random(5050)
+        inicio = date(2026, 1, 1)
+        hoy = date.today()
+        rango = max((hoy - inicio).days, 1)
+
+        motivos = [
+            'Control sano anual', 'Vacunación', 'Desparasitación', 'Consulta por vómitos',
+            'Cojera en pata trasera', 'Control de peso', 'Limpieza dental', 'Otitis',
+            'Dermatitis', 'Castración', 'Chequeo geriátrico', 'Herida superficial',
+            'Diarrea aguda', 'Control post-operatorio', 'Decaimiento general',
+            'Examen pre-quirúrgico', 'Revisión oftalmológica', 'Control de gestación',
+        ]
+
+        nuevas = []
+        for _ in range(faltan):
+            pac = rnd.choice(pacientes)
+            f = inicio + timedelta(days=rnd.randint(0, rango))
+            completada = f < hoy
+            seguimiento = rnd.choice(['no', 'no', 'no', 'programada', 'urgente'])
+            prox = None
+            if seguimiento != 'no':
+                prox = f + timedelta(days=rnd.randint(7, 90))
+            nuevas.append(Consulta(
+                paciente=pac,
+                veterinario=rnd.choice(vets),
+                fecha=f,
+                hora=time(rnd.randint(9, 18), rnd.choice([0, 15, 30, 45])),
+                motivo=rnd.choice(motivos),
+                peso_visita=round(rnd.uniform(2, 45), 2),
+                temperatura=round(rnd.uniform(37.5, 39.5), 1),
+                estado='completada' if completada else rnd.choice(['pendiente', 'en_curso']),
+                diagnostico='Evaluación clínica completada.' if completada else '',
+                tratamiento='Tratamiento indicado según hallazgos.' if completada else '',
+                requiere_seguimiento=seguimiento,
+                fecha_proxima_visita=prox,
+            ))
+
+        Consulta.objects.bulk_create(nuevas, batch_size=1000)
+        self.stdout.write(self.style.SUCCESS(f'  + {len(nuevas)} consultas creadas.'))

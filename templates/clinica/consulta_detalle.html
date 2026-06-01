@@ -252,7 +252,7 @@
             </div>
             <div class="campo">
               <label>Fecha próxima visita</label>
-              {% if puede_editar %}<input type="date" name="fecha_proxima_visita" value="{{ consulta.fecha_proxima_visita|date:'Y-m-d'|default:'' }}">{% else %}<div class="campo-readonly">{{ consulta.fecha_proxima_visita|date:"d M Y"|default:"—" }}</div>{% endif %}
+              {% if puede_editar %}<input type="date" name="fecha_proxima_visita" value="{{ consulta.fecha_proxima_visita|date:'Y-m-d'|default:'' }}">{% if consulta.fecha_proxima_visita %}<div style="font-size:11px;color:var(--text-secondary);margin-top:4px"><i class="ti ti-calendar-event"></i> {{ consulta.fecha_proxima_visita|date:"l"|capfirst }}</div>{% endif %}{% else %}<div class="campo-readonly">{{ consulta.fecha_proxima_visita|date:"l d M Y"|capfirst|default:"—" }}</div>{% endif %}
             </div>
             <div class="campo" style="grid-column:1/-1">
               <label>Indicaciones para el tutor</label>
