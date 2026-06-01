@@ -185,6 +185,9 @@ def index(request):
     seguimientos_vencidos = seguimientos_pendientes.filter(
         fecha_proxima_visita__lt=hoy
     ).count()
+    # Total de seguimientos pendientes (≤ semana) y recorte para no saturar el panel
+    seguimientos_total = seguimientos_pendientes.count()
+    seguimientos_pendientes = list(seguimientos_pendientes[:50])
 
     # Stats detalladas para el panel de consultas
     stats_consultas = {
@@ -218,6 +221,7 @@ def index(request):
         'vacunas_vencidas':      vacunas_vencidas,
         'proximas_48h':          proximas_48h,
         'seguimientos_vencidos': seguimientos_vencidos,
+        'seguimientos_total':    seguimientos_total,
         # pacientes panel
         'total_pacientes': Paciente.objects.filter(estado__in=['activo', 'seguimiento', 'urgente']).count(),
         # pacientes

@@ -62,6 +62,22 @@
 })();
 
 /* ══════════════════════════════════════════════════
+   SEGUIMIENTOS — revelar más sin saturar (de a 6)
+══════════════════════════════════════════════════ */
+function verMasSeguimientos() {
+  const ocultos = document.querySelectorAll('#seg-lista .seg-oculto');
+  let mostrados = 0;
+  ocultos.forEach(el => {
+    if (mostrados < 6) { el.classList.remove('seg-oculto'); mostrados++; }
+  });
+  // Si ya no quedan ocultos, esconder el botón
+  if (document.querySelectorAll('#seg-lista .seg-oculto').length === 0) {
+    const btn = document.getElementById('seg-vermas');
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+/* ══════════════════════════════════════════════════
    SIDEBAR TOGGLE
 ══════════════════════════════════════════════════ */
 function toggleSidebar() {

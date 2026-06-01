@@ -227,19 +227,33 @@
             <!-- Seguimientos -->
             {% if seguimientos_pendientes %}
             <div class="bloque-inicio">
-              <div class="bloque-titulo"><i class="ti ti-alarm"></i> Seguimientos</div>
-              {% for s in seguimientos_pendientes %}
-              <a href="{% url 'consulta_detalle' s.pk %}" class="seg-item seg-item--{% if s.requiere_seguimiento == 'urgente' or s.fecha_proxima_visita < hoy %}critico{% else %}normal{% endif %}">
-                <div class="seg-paciente">
-                  {% if s.paciente.especie == 'canino' %}🐕{% elif s.paciente.especie == 'felino' %}🐈{% elif s.paciente.especie == 'ave' %}🦜{% elif s.paciente.especie == 'reptil' %}🐢{% elif s.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
-                  {{ s.paciente.nombre }}
-                  {% if s.requiere_seguimiento == 'urgente' %}<span class="etiq etiq-rojo" style="font-size:8px;margin-left:3px">Urgente</span>{% endif %}
-                </div>
-                <div class="seg-detalle">
-                  {% if s.fecha_proxima_visita < hoy %}⚠ Vencido — {% elif s.fecha_proxima_visita == hoy %}Hoy — {% endif %}{{ s.fecha_proxima_visita|date:"D d M"|capfirst }}
-                </div>
-              </a>
-              {% endfor %}
+              <div class="bloque-titulo">
+                <i class="ti ti-alarm"></i> Seguimientos
+                <span class="bloque-titulo-sub">{{ seguimientos_total }} pendiente{{ seguimientos_total|pluralize:"s" }}</span>
+              </div>
+              <div id="seg-lista">
+                {% for s in seguimientos_pendientes %}
+                <a href="{% url 'consulta_detalle' s.pk %}"
+                   class="seg-item seg-item--{% if s.requiere_seguimiento == 'urgente' or s.fecha_proxima_visita < hoy %}critico{% else %}normal{% endif %}{% if forloop.counter > 6 %} seg-oculto{% endif %}">
+                  <div class="seg-paciente">
+                    {% if s.paciente.especie == 'canino' %}🐕{% elif s.paciente.especie == 'felino' %}🐈{% elif s.paciente.especie == 'ave' %}🦜{% elif s.paciente.especie == 'reptil' %}🐢{% elif s.paciente.especie == 'roedor' %}🐇{% else %}🐾{% endif %}
+                    {{ s.paciente.nombre }}
+                    {% if s.requiere_seguimiento == 'urgente' %}<span class="etiq etiq-rojo" style="font-size:8px;margin-left:3px">Urgente</span>{% endif %}
+                  </div>
+                  <div class="seg-detalle">
+                    {% if s.fecha_proxima_visita < hoy %}⚠ Vencido — {% elif s.fecha_proxima_visita == hoy %}Hoy — {% endif %}{{ s.fecha_proxima_visita|date:"D d M"|capfirst }}
+                  </div>
+                </a>
+                {% endfor %}
+              </div>
+              {% if seguimientos_pendientes|length > 6 %}
+              <button type="button" class="seg-vermas" id="seg-vermas" onclick="verMasSeguimientos()">
+                <i class="ti ti-chevron-down"></i> Ver más
+              </button>
+              {% endif %}
+              {% if seguimientos_total > seguimientos_pendientes|length %}
+              <a href="?pantalla=consultas" class="seg-vertodos">Ver todos en Consultas →</a>
+              {% endif %}
             </div>
             {% endif %}
 
@@ -406,8 +420,8 @@
           </div>
         </div>
 
-        <!-- Alertas de seguimiento -->
-        {% for s in seguimientos_pendientes %}
+        <!-- Alertas de seguimiento (solo las más próximas/urgentes) -->
+        {% for s in seguimientos_pendientes|slice:":4" %}
         <div class="seguimiento-banner {% if s.requiere_seguimiento == 'urgente' %}urgente{% endif %}" style="margin-bottom:6px">
           <i class="ti ti-{% if s.requiere_seguimiento == 'urgente' %}alert-triangle{% else %}clock{% endif %}" style="font-size:15px;flex-shrink:0"></i>
           <span>
@@ -419,6 +433,12 @@
           <a href="{% url 'consulta_detalle' s.pk %}" style="margin-left:auto;color:inherit;font-size:11px;text-decoration:underline;white-space:nowrap">Ver consulta</a>
         </div>
         {% endfor %}
+        {% if seguimientos_total > 4 %}
+        <div class="seguimiento-banner" style="margin-bottom:6px;opacity:0.85">
+          <i class="ti ti-dots" style="font-size:15px;flex-shrink:0"></i>
+          <span>Y <strong>{{ seguimientos_total|add:"-4" }}</strong> seguimiento{{ seguimientos_total|add:"-4"|pluralize:"s" }} más pendiente{{ seguimientos_total|add:"-4"|pluralize:"s" }}.</span>
+        </div>
+        {% endif %}
 
         <!-- Tabs -->
         <div class="pestanias" style="margin-bottom:0;border-radius:8px 8px 0 0;background:white;border:1px solid #e5e7eb;border-bottom:none;padding:0 12px">
