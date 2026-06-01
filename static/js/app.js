@@ -78,6 +78,30 @@ function verMasSeguimientos() {
 }
 
 /* ══════════════════════════════════════════════════
+   TABLAS — revelar filas de a 20 (Pacientes / Tutores)
+══════════════════════════════════════════════════ */
+function verMasFilas(tipo) {
+  const tbody = document.getElementById('tbody-' + tipo);
+  if (!tbody) return;
+  const ocultas = tbody.querySelectorAll('tr.fila-oculta');
+  let n = 0;
+  ocultas.forEach(tr => { if (n < 20) { tr.classList.remove('fila-oculta'); n++; } });
+
+  const restantes = tbody.querySelectorAll('tr.fila-oculta').length;
+  const total = tbody.querySelectorAll('tr.buscable').length;
+  const info = document.getElementById(tipo + '-visibles');
+  if (info) info.textContent = total - restantes;
+
+  if (restantes === 0) {
+    const footer = document.getElementById('footer-' + tipo);
+    const btn = document.getElementById(tipo + '-vermas');
+    if (btn) btn.style.display = 'none';
+    if (footer) footer.querySelector('.tabla-footer-info').textContent =
+      'Mostrando los ' + total + ' registros';
+  }
+}
+
+/* ══════════════════════════════════════════════════
    SIDEBAR TOGGLE
 ══════════════════════════════════════════════════ */
 function toggleSidebar() {

@@ -934,20 +934,41 @@ body {
 }
 .seg-detalle  { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 .seg-oculto { display: none; }
-.seg-vermas {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  width: 100%; margin-top: 6px; padding: 6px;
-  background: var(--bg-secondary); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text-secondary);
-  font-size: 11px; font-weight: 600; cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+
+/* ── Botón "Ver más" unificado (ghost pill) ── */
+.btn-vermas {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
 }
-.seg-vermas:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.btn-vermas:hover { background: var(--accent-light); border-color: var(--accent); }
+.btn-vermas:active { transform: scale(0.97); }
+.btn-vermas i { font-size: 15px; }
+
+/* "Ver más" del panel de seguimientos (ancho completo en sidebar) */
+.seg-vermas { width: 100%; justify-content: center; margin-top: 8px; }
 .seg-vertodos {
-  display: block; text-align: center; margin-top: 6px;
-  font-size: 11px; color: var(--accent); text-decoration: none;
+  display: block; text-align: center; margin-top: 8px;
+  font-size: 11px; color: var(--text-secondary); text-decoration: none;
 }
-.seg-vertodos:hover { text-decoration: underline; }
+.seg-vertodos:hover { color: var(--accent); }
+
+/* ── Pie de tabla con contador + Ver más ── */
+.tabla-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+.tabla-footer-info { font-size: 12px; color: var(--text-secondary); }
+.tabla-footer-info strong { color: var(--text-primary); }
 
 /* Próximas 48 h */
 .prox-dia {
